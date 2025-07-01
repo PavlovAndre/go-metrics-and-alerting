@@ -66,7 +66,7 @@ func updatePage(w http.ResponseWriter, r *http.Request) {
 		repository.Store.SetCounter(metricName, val)
 	}
 
-	return
+	//return
 }
 
 func main() {
