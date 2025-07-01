@@ -19,15 +19,15 @@ func updatePage(w http.ResponseWriter, r *http.Request) {
 	}
 	//Получаем входящий URL и разбиваем по переменным
 	urlRequest := r.URL.Path
-	sliceUrl := strings.Split(urlRequest, "/")
-	fmt.Println(sliceUrl)
-	if len(sliceUrl) != 5 {
+	sliceURL := strings.Split(urlRequest, "/")
+	fmt.Println(sliceURL)
+	if len(sliceURL) != 5 {
 		http.NotFound(w, r)
 		return
 	}
-	metricType := sliceUrl[2]
-	metricName := sliceUrl[3]
-	metricValue := sliceUrl[4]
+	metricType := sliceURL[2]
+	metricName := sliceURL[3]
+	metricValue := sliceURL[4]
 
 	// Проверям, что введен правильный тип метрик
 	if metricType != "gauge" && metricType != "counter" {
