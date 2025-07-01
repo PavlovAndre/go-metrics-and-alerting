@@ -1,0 +1,31 @@
+package repository
+
+type MemStore struct {
+	gauge   map[string]float64
+	counter map[string]int64
+}
+
+// Создание нового экземпляра
+func New() *MemStore {
+	return &MemStore{
+		gauge:   make(map[string]float64),
+		counter: make(map[string]int64),
+	}
+}
+
+// Обновление значения Gauge
+func (ms *MemStore) SetGauge(key string, value float64) {
+	ms.gauge[key] = value
+}
+
+// Увеличение счетчика Counter
+func (ms *MemStore) SetCounter(key string, value int64) {
+	v, ok := ms.counter[key]
+	if ok {
+		ms.counter[key] = v + value
+	} else {
+		ms.counter[key] = value
+	}
+}
+
+var Store *MemStore
