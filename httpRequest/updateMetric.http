@@ -12,4 +12,8 @@ Content-Type: text/plain
 
 ### GET request with a header
 GET http://localhost:8080/update/gauge/someMetric2/527
-Accept: atext/plain
+Accept: text/plain
+
+### GET request with a header
+GET http://localhost:8080/
+Accept: text/plain

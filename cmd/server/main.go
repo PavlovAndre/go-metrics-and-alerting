@@ -3,10 +3,31 @@ package main
 import (
 	"fmt"
 	"github.com/PavlovAndre/go-metrics-and-alerting.git/internal/repository"
+	"github.com/go-chi/chi/v5"
+	"html/template"
 	"net/http"
 	"strconv"
-	"strings"
 )
+
+type metrics struct {
+	Gauge   map[string]float64
+	Counter map[string]int64
+}
+
+const templateHtml = `<!DOCTYPE html>
+<html>
+<body>
+<h2>gauges</h2>
+<ul>
+{{range $key, $value := .Gauge}}<li>{{$key}} {{$value}}</li>{{end}}
+</ul>
+<h2>counters</h2>
+<ul>
+{{range $key, $value := .Counter}}<li>{{$key}} {{$value}}</li>{{end}}
+</ul>
+</body>
+</html>
+`
 
 func updatePage(w http.ResponseWriter, r *http.Request) {
 	//Проверяем, что метод POST
@@ -17,8 +38,12 @@ func updatePage(w http.ResponseWriter, r *http.Request) {
 		//w.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
+	metricType := chi.URLParam(r, "type")
+	metricName := chi.URLParam(r, "name")
+	metricValue := chi.URLParam(r, "value")
+
 	//Получаем входящий URL и разбиваем по переменным
-	urlRequest := r.URL.Path
+	/*urlRequest := r.URL.Path
 	sliceURL := strings.Split(urlRequest, "/")
 	fmt.Println(sliceURL)
 	if len(sliceURL) != 5 {
@@ -27,7 +52,7 @@ func updatePage(w http.ResponseWriter, r *http.Request) {
 	}
 	metricType := sliceURL[2]
 	metricName := sliceURL[3]
-	metricValue := sliceURL[4]
+	metricValue := sliceURL[4]*/
 
 	// Проверям, что введен правильный тип метрик
 	if metricType != "gauge" && metricType != "counter" {
@@ -66,16 +91,61 @@ func updatePage(w http.ResponseWriter, r *http.Request) {
 		repository.Store.SetCounter(metricName, val)
 	}
 
-	//return
+}
+
+func getCountMetric(response http.ResponseWriter, r *http.Request) {
+	metricType := chi.URLParam(r, "type")
+	metricName := chi.URLParam(r, "name")
+	if metricType == "counter" {
+		value, ok := repository.Store.GetCounter(metricName)
+		if !ok {
+			http.NotFound(response, r)
+			return
+		}
+		if _, err := fmt.Fprint(response, strconv.FormatInt(value, 10)); err != nil {
+			http.Error(response, err.Error(), http.StatusInternalServerError)
+		}
+
+	}
+	if metricType == "gauge" {
+		value, ok := repository.Store.GetGauge(metricName)
+		if !ok {
+			http.NotFound(response, r)
+			return
+		}
+		if _, err := fmt.Fprint(response, strconv.FormatFloat(value, 'f', 4, 64)); err != nil {
+			http.Error(response, err.Error(), http.StatusInternalServerError)
+		}
+
+	}
+	http.NotFound(response, r)
+}
+
+func allMetrics(response http.ResponseWriter, r *http.Request) {
+	repository.Store.SetGauge("test", 5)
+	gauges := repository.Store.GetGauges()
+	counters := repository.Store.GetCounters()
+	t, err := template.New("templ").Parse(templateHtml)
+	if err != nil {
+		http.Error(response, err.Error(), http.StatusInternalServerError)
+	}
+	if err := t.Execute(response, metrics{gauges, counters}); err != nil {
+		http.Error(response, err.Error(), http.StatusInternalServerError)
+	}
 }
 
 func main() {
 	repository.Store = repository.New()
 
-	mux := http.NewServeMux()
-	mux.HandleFunc("/update/", updatePage)
+	r := chi.NewRouter()
+	r.Post("/update/{type}/{name}/{value}", updatePage)
+	r.Get("/value/{type}/{name}", getCountMetric)
+	r.Get("/", allMetrics)
 
-	err := http.ListenAndServe(":8080", mux)
+	//mux := http.NewServeMux()
+	//mux.HandleFunc("/update/", updatePage)
+
+	err := http.ListenAndServe(":8080", r)
 	if err != nil {
 		panic(err)
 	}

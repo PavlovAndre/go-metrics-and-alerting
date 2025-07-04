@@ -33,9 +33,20 @@ func (ms *MemStore) GetGauges() map[string]float64 {
 	return ms.gauge
 }
 
+func (ms *MemStore) GetGauge(name string) (float64, bool) {
+	value, ok := ms.gauge[name]
+	return value, ok
+}
+
 // Получить значения Counter
 func (ms *MemStore) GetCounters() map[string]int64 {
 	return ms.counter
+}
+
+// Получить значение одного Counter
+func (ms *MemStore) GetCounter(name string) (int64, bool) {
+	counter, ok := ms.counter[name]
+	return counter, ok
 }
 
 var Store *MemStore
