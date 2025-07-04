@@ -122,7 +122,7 @@ func getCountMetric(response http.ResponseWriter, r *http.Request) {
 }
 
 func allMetrics(response http.ResponseWriter, r *http.Request) {
-	repository.Store.SetGauge("test", 5)
+	//repository.Store.SetGauge("test", 5)
 	gauges := repository.Store.GetGauges()
 	counters := repository.Store.GetCounters()
 	t, err := template.New("templ").Parse(templateHTML)
