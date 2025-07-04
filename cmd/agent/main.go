@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/PavlovAndre/go-metrics-and-alerting.git/internal/repository"
+	"math/rand"
 	"net/http"
 	"runtime"
 	"sync"
@@ -41,7 +42,7 @@ func collectMetrics() {
 		repository.Store.SetGauge("StackSys", float64(m.StackSys))
 		repository.Store.SetGauge("Sys", float64(m.Sys))
 		repository.Store.SetGauge("TotalAlloc", float64(m.TotalAlloc))
-		//repository.Store.SetGauge("RandomValue", float64(m.RandomValue))
+		repository.Store.SetGauge("RandomValue", rand.Float64())
 		repository.Store.SetCounter("PollCount", 1)
 
 		time.Sleep(2 * time.Second)
