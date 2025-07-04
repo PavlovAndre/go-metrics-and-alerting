@@ -14,7 +14,7 @@ type metrics struct {
 	Counter map[string]int64
 }
 
-const templateHtml = `<!DOCTYPE html>
+const templateHTML = `<!DOCTYPE html>
 <html>
 <body>
 <h2>gauges</h2>
@@ -125,7 +125,7 @@ func allMetrics(response http.ResponseWriter, r *http.Request) {
 	repository.Store.SetGauge("test", 5)
 	gauges := repository.Store.GetGauges()
 	counters := repository.Store.GetCounters()
-	t, err := template.New("templ").Parse(templateHtml)
+	t, err := template.New("templ").Parse(templateHTML)
 	if err != nil {
 		http.Error(response, err.Error(), http.StatusInternalServerError)
 	}
