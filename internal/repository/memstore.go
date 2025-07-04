@@ -28,4 +28,14 @@ func (ms *MemStore) SetCounter(key string, value int64) {
 	}
 }
 
+// Получить значения Gauge
+func (ms *MemStore) GetGauges() map[string]float64 {
+	return ms.gauge
+}
+
+// Получить значения Counter
+func (ms *MemStore) GetCounters() map[string]int64 {
+	return ms.counter
+}
+
 var Store *MemStore
