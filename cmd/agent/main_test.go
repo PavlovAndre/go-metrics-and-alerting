@@ -9,6 +9,7 @@ func TestSendMetrics(t *testing.T) {
 		metricName  string
 		metricValue float64
 	}{
+
 		{
 			name:        "1",
 			metricType:  "gauge",

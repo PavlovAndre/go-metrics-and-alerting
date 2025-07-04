@@ -61,7 +61,6 @@ func sendMetrics() {
 				fmt.Printf("Error posting to %s: %s\n", sendURL, err)
 			}
 			fmt.Println(resp)
-
 		}
 		for key, value := range repository.Store.GetCounters() {
 			//http://<АДРЕС_СЕРВЕРА>/update/<ТИП_МЕТРИКИ>/<ИМЯ_МЕТРИКИ>/<ЗНАЧЕНИЕ_МЕТРИКИ>
@@ -72,7 +71,6 @@ func sendMetrics() {
 				fmt.Printf("Error posting to %s: %s\n", sendURL, err)
 			}
 			fmt.Println(resp)
-
 		}
 		time.Sleep(10 * time.Second)
 	}
