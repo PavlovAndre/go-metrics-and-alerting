@@ -55,6 +55,7 @@ func sendMetrics() {
 			//http://<АДРЕС_СЕРВЕРА>/update/<ТИП_МЕТРИКИ>/<ИМЯ_МЕТРИКИ>/<ЗНАЧЕНИЕ_МЕТРИКИ>
 			sendURL := fmt.Sprintf("http://localhost:8080/update/%s/%s/%f", "gauge", key, value)
 			resp, err := http.Post(sendURL, "text/plain", nil)
+			resp.Body.Close()
 			if err != nil {
 				fmt.Printf("Error posting to %s: %s\n", sendURL, err)
 			}
@@ -65,6 +66,7 @@ func sendMetrics() {
 			//http://<АДРЕС_СЕРВЕРА>/update/<ТИП_МЕТРИКИ>/<ИМЯ_МЕТРИКИ>/<ЗНАЧЕНИЕ_МЕТРИКИ>
 			sendURL := fmt.Sprintf("http://localhost:8080/update/%s/%s/%d", "counter", key, value)
 			resp, err := http.Post(sendURL, "text/plain", nil)
+			resp.Body.Close()
 			if err != nil {
 				fmt.Printf("Error posting to %s: %s\n", sendURL, err)
 			}
