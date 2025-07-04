@@ -104,7 +104,9 @@ func getCountMetric(response http.ResponseWriter, r *http.Request) {
 		}
 		if _, err := fmt.Fprint(response, strconv.FormatInt(value, 10)); err != nil {
 			http.Error(response, err.Error(), http.StatusInternalServerError)
+			return
 		}
+		return
 
 	}
 	if metricType == "gauge" {
@@ -115,7 +117,9 @@ func getCountMetric(response http.ResponseWriter, r *http.Request) {
 		}
 		if _, err := fmt.Fprint(response, strconv.FormatFloat(value, 'f', 4, 64)); err != nil {
 			http.Error(response, err.Error(), http.StatusInternalServerError)
+			return
 		}
+		return
 
 	}
 	http.NotFound(response, r)
