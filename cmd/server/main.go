@@ -115,7 +115,7 @@ func getCountMetric(response http.ResponseWriter, r *http.Request) {
 			http.NotFound(response, r)
 			return
 		}
-		if _, err := fmt.Fprint(response, strconv.FormatFloat(value, 'f', 3, 64)); err != nil {
+		if _, err := fmt.Fprint(response, strconv.FormatFloat(value, 'f', 2, 64)); err != nil {
 			http.Error(response, err.Error(), http.StatusInternalServerError)
 			return
 		}
