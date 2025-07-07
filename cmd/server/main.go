@@ -141,16 +141,25 @@ func allMetrics(response http.ResponseWriter, r *http.Request) {
 func main() {
 	repository.Store = repository.New()
 
+	// обрабатываем аргументы командной строки
+	parseFlags()
+
 	r := chi.NewRouter()
 	r.Post("/update/{type}/{name}/{value}", updatePage)
 	r.Get("/value/{type}/{name}", getCountMetric)
 	r.Get("/", allMetrics)
 
-	//mux := http.NewServeMux()
-	//mux.HandleFunc("/update/", updatePage)
-
-	err := http.ListenAndServe(":8080", r)
-	if err != nil {
+	if err := runServer(r); err != nil {
 		panic(err)
 	}
+
+	/*err := http.ListenAndServe(":8080", r)
+	if err != nil {
+		panic(err)
+	}*/
+}
+
+func runServer(router chi.Router) error {
+	fmt.Println("Starting server", flagRunAddr)
+	return http.ListenAndServe(flagRunAddr, router)
 }

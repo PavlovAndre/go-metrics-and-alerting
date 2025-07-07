@@ -45,7 +45,7 @@ func collectMetrics() {
 		repository.Store.SetGauge("RandomValue", rand.Float64())
 		repository.Store.SetCounter("PollCount", 1)
 
-		time.Sleep(2 * time.Second)
+		time.Sleep(time.Duration(pollInterval) * time.Second)
 	}
 }
 
@@ -54,7 +54,7 @@ func sendMetrics() {
 	for {
 		for key, value := range repository.Store.GetGauges() {
 			//http://<АДРЕС_СЕРВЕРА>/update/<ТИП_МЕТРИКИ>/<ИМЯ_МЕТРИКИ>/<ЗНАЧЕНИЕ_МЕТРИКИ>
-			sendURL := fmt.Sprintf("http://localhost:8080/update/%s/%s/%f", "gauge", key, value)
+			sendURL := fmt.Sprintf("http://%s/update/%s/%s/%f", addrServer, "gauge", key, value)
 			resp, err := http.Post(sendURL, "text/plain", nil)
 			resp.Body.Close()
 			if err != nil {
@@ -64,8 +64,8 @@ func sendMetrics() {
 
 		}
 		for key, value := range repository.Store.GetCounters() {
-			//http://<АДРЕС_СЕРВЕРА>/update/<ТИП_МЕТРИКИ>/<ИМЯ_МЕТРИКИ>/<ЗНАЧЕНИЕ_МЕТРИКИ>
-			sendURL := fmt.Sprintf("http://localhost:8080/update/%s/%s/%d", "counter", key, value)
+			//http://<АДРЕС_СЕРВЕРА>/update/<ТИП_МЕТРИКИ>/<ИМЯ_МЕТРИКИ>/<ЗНАЧЕНИЕ_МЕТРИКИ>"localhost:8080"
+			sendURL := fmt.Sprintf("http://%s/update/%s/%s/%d", addrServer, "counter", key, value)
 			resp, err := http.Post(sendURL, "text/plain", nil)
 			resp.Body.Close()
 			if err != nil {
@@ -74,11 +74,12 @@ func sendMetrics() {
 			fmt.Println(resp)
 
 		}
-		time.Sleep(10 * time.Second)
+		time.Sleep(time.Duration(reportInterval) * time.Second)
 	}
 }
 
 func main() {
+	parseFlags()
 	wg := sync.WaitGroup{}
 	wg.Add(2)
 	repository.Store = repository.New()
