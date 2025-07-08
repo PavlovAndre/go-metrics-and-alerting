@@ -42,18 +42,6 @@ func updatePage(w http.ResponseWriter, r *http.Request) {
 	metricName := chi.URLParam(r, "name")
 	metricValue := chi.URLParam(r, "value")
 
-	//Получаем входящий URL и разбиваем по переменным
-	/*urlRequest := r.URL.Path
-	sliceURL := strings.Split(urlRequest, "/")
-	fmt.Println(sliceURL)
-	if len(sliceURL) != 5 {
-		http.NotFound(w, r)
-		return
-	}
-	metricType := sliceURL[2]
-	metricName := sliceURL[3]
-	metricValue := sliceURL[4]*/
-
 	// Проверям, что введен правильный тип метрик
 	if metricType != "gauge" && metricType != "counter" {
 		//fmt.Fprint(w, "Bad request")
@@ -139,17 +127,17 @@ func allMetrics(response http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	repository.Store = repository.New()
 
 	// обрабатываем аргументы командной строки
-	parseFlags()
+	config, _ := parseFlags()
 
+	repository.Store = repository.New()
 	r := chi.NewRouter()
 	r.Post("/update/{type}/{name}/{value}", updatePage)
 	r.Get("/value/{type}/{name}", getCountMetric)
 	r.Get("/", allMetrics)
 
-	if err := runServer(r); err != nil {
+	if err := runServer(r, config.AddrServer); err != nil {
 		panic(err)
 	}
 
@@ -159,7 +147,7 @@ func main() {
 	}*/
 }
 
-func runServer(router chi.Router) error {
-	fmt.Println("Starting server", flagRunAddr)
-	return http.ListenAndServe(flagRunAddr, router)
+func runServer(router chi.Router, addr string) error {
+	fmt.Println("Starting server", addr)
+	return http.ListenAndServe(addr, router)
 }
