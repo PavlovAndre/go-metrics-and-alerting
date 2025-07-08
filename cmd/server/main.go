@@ -5,6 +5,7 @@ import (
 	"github.com/PavlovAndre/go-metrics-and-alerting.git/internal/repository"
 	"github.com/go-chi/chi/v5"
 	"html/template"
+	"log"
 	"net/http"
 	"strconv"
 )
@@ -129,7 +130,10 @@ func allMetrics(response http.ResponseWriter, r *http.Request) {
 func main() {
 
 	// обрабатываем аргументы командной строки
-	config, _ := parseFlags()
+	config, err := parseFlags()
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	repository.Store = repository.New()
 	r := chi.NewRouter()
