@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/PavlovAndre/go-metrics-and-alerting.git/internal/repository"
+	"log"
 	"math/rand"
 	"net/http"
 	"runtime"
@@ -11,7 +12,7 @@ import (
 )
 
 // Функция сбора метрик
-func collectMetrics() {
+func collectMetrics(pollInterval int) {
 	for {
 		m := runtime.MemStats{}
 		runtime.ReadMemStats(&m)
@@ -50,7 +51,7 @@ func collectMetrics() {
 }
 
 // Функция отправки метрик
-func sendMetrics() {
+func sendMetrics(addrServer string, reportInterval int) {
 	for {
 		for key, value := range repository.Store.GetGauges() {
 			//http://<АДРЕС_СЕРВЕРА>/update/<ТИП_МЕТРИКИ>/<ИМЯ_МЕТРИКИ>/<ЗНАЧЕНИЕ_МЕТРИКИ>
@@ -79,17 +80,21 @@ func sendMetrics() {
 }
 
 func main() {
-	parseFlags()
+	config, err := parseFlags()
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	wg := sync.WaitGroup{}
 	wg.Add(2)
 	repository.Store = repository.New()
 	go func() {
 		defer wg.Done()
-		collectMetrics()
+		collectMetrics(config.PollInterval)
 	}()
 	go func() {
 		defer wg.Done()
-		sendMetrics()
+		sendMetrics(config.AddrServer, config.ReportInterval)
 	}()
 	wg.Wait()
 
