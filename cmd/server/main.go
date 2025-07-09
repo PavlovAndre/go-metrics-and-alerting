@@ -19,8 +19,6 @@ func main() {
 
 	//repository.Store = repository.New()
 	store := repository.New()
-	//r := chi.NewRouter()
-	//rout := handler.New(store, r)
 
 	r := chi.NewRouter()
 	r.Post("/update/{type}/{name}/{value}", handler.UpdatePage(store))
