@@ -77,7 +77,7 @@ func updatePage(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "Bad value", http.StatusBadRequest)
 			return
 		}
-		repository.Store.SetCounter(metricName, val)
+		repository.Store.AddCounter(metricName, val)
 	}
 
 }
@@ -124,7 +124,9 @@ func allMetrics(response http.ResponseWriter, r *http.Request) {
 	}
 	if err := t.Execute(response, metrics{gauges, counters}); err != nil {
 		http.Error(response, err.Error(), http.StatusInternalServerError)
+		return
 	}
+
 }
 
 func main() {
