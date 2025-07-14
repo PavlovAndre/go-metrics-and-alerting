@@ -43,7 +43,6 @@ func (s *Sender) SendMetrics() {
 
 			}
 			s.memStore.SetCounter("PollCount", 0)
-			//time.Sleep(time.Duration(s.reportInterval) * time.Second)
 		}
 	}
 }

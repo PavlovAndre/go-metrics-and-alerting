@@ -5,6 +5,7 @@ import (
 	"github.com/PavlovAndre/go-metrics-and-alerting.git/internal/repository"
 	"github.com/go-chi/chi/v5"
 	"html/template"
+	"log"
 	"net/http"
 	"strconv"
 )
@@ -22,7 +23,6 @@ type metrics struct {
 func New(store *repository.MemStore, root *chi.Mux) *Handler {
 	return &Handler{memStore: store, router: root}
 }
-
 
 const templateHTML = `<!DOCTYPE html>
 <html>
@@ -96,7 +96,9 @@ func GetCountMetric(store *repository.MemStore) http.HandlerFunc {
 				return
 			}
 			if _, err := fmt.Fprint(response, strconv.FormatInt(value, 10)); err != nil {
-				http.Error(response, err.Error(), http.StatusInternalServerError)
+				log.Printf("Failed to GetCountMetric: %v", err)
+				response.WriteHeader(http.StatusInternalServerError)
+				//http.Error(response, err.Error(), http.StatusInternalServerError)
 				return
 			}
 			return
@@ -118,7 +120,6 @@ func GetCountMetric(store *repository.MemStore) http.HandlerFunc {
 		http.NotFound(response, r)
 	}
 }
-
 
 func AllMetrics(store *repository.MemStore) http.HandlerFunc {
 	return func(response http.ResponseWriter, r *http.Request) {
