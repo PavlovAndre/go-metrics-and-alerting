@@ -17,7 +17,6 @@ func main() {
 	wg := sync.WaitGroup{}
 	wg.Add(2)
 	store := repository.New()
-
 	coll := collector.New(store, config.PollInterval)
 	send := sender.New(store, config.ReportInterval, config.AddrServer)
 
