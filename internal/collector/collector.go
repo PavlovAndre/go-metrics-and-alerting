@@ -20,7 +20,7 @@ func New(store *repository.MemStore, pollInt int) *Collector {
 func (c *Collector) CollectMetrics() {
 	for {
 		ticker := time.NewTicker(time.Duration(c.pollInterval) * time.Second)
-		defer ticker.Stop()
+		//defer ticker.Stop()
 		for range ticker.C {
 			//select {
 			//case <-ticker.C:
