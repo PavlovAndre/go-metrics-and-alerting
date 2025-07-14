@@ -26,6 +26,8 @@ func (ms *MemStore) SetGauge(key string, value float64) {
 
 // Увеличение счетчика Counter
 func (ms *MemStore) AddCounter(key string, value int64) {
+	ms.mu.Lock()
+	defer ms.mu.Unlock()
 	v, ok := ms.counter[key]
 	if ok {
 		ms.counter[key] = v + value
@@ -36,6 +38,8 @@ func (ms *MemStore) AddCounter(key string, value int64) {
 
 // Увеличение счетчика Counter
 func (ms *MemStore) SetCounter(key string, value int64) {
+	ms.mu.Lock()
+	defer ms.mu.Unlock()
 	ms.counter[key] = value
 }
 
@@ -47,17 +51,23 @@ func (ms *MemStore) GetGauges() map[string]float64 {
 }
 
 func (ms *MemStore) GetGauge(name string) (float64, bool) {
+	ms.mu.RLock()
+	defer ms.mu.RUnlock()
 	value, ok := ms.gauge[name]
 	return value, ok
 }
 
 // Получить значения Counter
 func (ms *MemStore) GetCounters() map[string]int64 {
+	ms.mu.RLock()
+	defer ms.mu.RUnlock()
 	return ms.counter
 }
 
 // Получить значение одного Counter
 func (ms *MemStore) GetCounter(name string) (int64, bool) {
+	ms.mu.RLock()
+	defer ms.mu.RUnlock()
 	counter, ok := ms.counter[name]
 	return counter, ok
 }

@@ -17,7 +17,6 @@ func main() {
 		log.Fatal(err)
 	}
 
-	//repository.Store = repository.New()
 	store := repository.New()
 
 	r := chi.NewRouter()

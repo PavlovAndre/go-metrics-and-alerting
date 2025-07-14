@@ -23,13 +23,6 @@ func New(store *repository.MemStore, root *chi.Mux) *Handler {
 	return &Handler{memStore: store, router: root}
 }
 
-/*func (h *Handler) Rout() chi.Router {
-	r := chi.NewRouter()
-	r.Post("/update/{type}/{name}/{value}", updatePage)
-	r.Get("/value/{type}/{name}", getCountMetric)
-	r.Get("/", allMetrics)
-	return r
-}*/
 
 const templateHTML = `<!DOCTYPE html>
 <html>
@@ -126,19 +119,6 @@ func GetCountMetric(store *repository.MemStore) http.HandlerFunc {
 	}
 }
 
-/*func AllMetrics(response http.ResponseWriter, r *http.Request) {
-	gauges := repository.Store.GetGauges()
-	counters := repository.Store.GetCounters()
-	t, err := template.New("templ").Parse(templateHTML)
-	if err != nil {
-		http.Error(response, err.Error(), http.StatusInternalServerError)
-	}
-	if err := t.Execute(response, metrics{gauges, counters}); err != nil {
-		http.Error(response, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-}*/
 
 func AllMetrics(store *repository.MemStore) http.HandlerFunc {
 	return func(response http.ResponseWriter, r *http.Request) {
