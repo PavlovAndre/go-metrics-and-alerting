@@ -20,10 +20,7 @@ func New(store *repository.MemStore, pollInt int) *Collector {
 func (c *Collector) CollectMetrics() {
 	for {
 		ticker := time.NewTicker(time.Duration(c.pollInterval) * time.Second)
-		//defer ticker.Stop()
 		for range ticker.C {
-			//select {
-			//case <-ticker.C:
 			m := runtime.MemStats{}
 			runtime.ReadMemStats(&m)
 			c.memStore.SetGauge("Alloc", float64(m.Alloc))
@@ -56,7 +53,5 @@ func (c *Collector) CollectMetrics() {
 			c.memStore.SetGauge("RandomValue", rand.Float64())
 			c.memStore.AddCounter("PollCount", 1)
 		}
-
-		//time.Sleep(time.Duration(c.pollInterval) * time.Second)
 	}
 }
