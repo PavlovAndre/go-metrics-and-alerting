@@ -98,7 +98,6 @@ func GetCountMetric(store *repository.MemStore) http.HandlerFunc {
 			if _, err := fmt.Fprint(response, strconv.FormatInt(value, 10)); err != nil {
 				log.Printf("Failed to GetCountMetric: %v", err)
 				response.WriteHeader(http.StatusInternalServerError)
-				//http.Error(response, err.Error(), http.StatusInternalServerError)
 				return
 			}
 			return
@@ -111,7 +110,8 @@ func GetCountMetric(store *repository.MemStore) http.HandlerFunc {
 				return
 			}
 			if _, err := fmt.Fprint(response, strconv.FormatFloat(value, 'f', 3, 64)); err != nil {
-				http.Error(response, err.Error(), http.StatusInternalServerError)
+				log.Printf("Failed to GetCountMetric: %v", err)
+				response.WriteHeader(http.StatusInternalServerError)
 				return
 			}
 			return
@@ -127,10 +127,12 @@ func AllMetrics(store *repository.MemStore) http.HandlerFunc {
 		counters := store.GetCounters()
 		t, err := template.New("templ").Parse(templateHTML)
 		if err != nil {
-			http.Error(response, err.Error(), http.StatusInternalServerError)
+			log.Printf("Failed to Allmetrics: %v", err)
+			response.WriteHeader(http.StatusInternalServerError)
 		}
 		if err := t.Execute(response, metrics{gauges, counters}); err != nil {
-			http.Error(response, err.Error(), http.StatusInternalServerError)
+			log.Printf("Failed to Allmetrics: %v", err)
+			response.WriteHeader(http.StatusInternalServerError)
 			return
 		}
 
