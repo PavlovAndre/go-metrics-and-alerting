@@ -1,0 +1,23 @@
+### Post counter
+POST http://localhost:8080/update/counter/someMetric2/527
+Content-Type: text/plain
+
+### Post gauge
+POST http://localhost:8080/update/gauge/someMetric/527
+Content-Type: text/plain
+
+### Post gauge
+POST http://localhost:8080/update/counter/someMetric2/dd
+Content-Type: text/plain
+
+### GET request with a header
+GET http://localhost:8080/update/gauge/someMetric2/527
+Accept: text/plain
+
+### GET
+GET http://localhost:8080/
+Accept: text/plain
+
+### GET
+GET http://localhost:8080/value/counter/someMetric2
+Accept: text/plain
