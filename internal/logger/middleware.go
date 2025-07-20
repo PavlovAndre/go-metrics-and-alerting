@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-// LogRequest  мидлеваре, которое регистрирует данные запроса
+// LogRequest мидлеваре, которое регистрирует данные запроса
 // Функция регистрирует метод, путь и продолжительность каждого запроса
 func LogRequest(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
