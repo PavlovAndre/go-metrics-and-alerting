@@ -10,6 +10,7 @@ func parseFlags() (*config.ServerCfg, error) {
 	fs := flag.NewFlagSet("server", flag.ExitOnError)
 	options := []config.ServerOption{
 		addr(fs),
+		logLvl(fs),
 	}
 
 	err := fs.Parse(os.Args[1:])
@@ -29,5 +30,18 @@ func addr(fs *flag.FlagSet) config.ServerOption {
 			return
 		}
 		cfg.AddrServer = addrFlag
+	}
+}
+
+func logLvl(fs *flag.FlagSet) config.ServerOption {
+	var lvlFlag string
+	fs.StringVar(&lvlFlag, "l", "info", "log level")
+
+	return func(cfg *config.ServerCfg) {
+		if env := os.Getenv("LOG_LEVEL"); env != "" {
+			cfg.LogLevel = env
+			return
+		}
+		cfg.LogLevel = lvlFlag
 	}
 }
