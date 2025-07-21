@@ -35,6 +35,8 @@ func main() {
 	r.Post("/update/{type}/{name}/{value}", handler.UpdatePage(store))
 	r.Get("/value/{type}/{name}", handler.GetCountMetric(store))
 	r.Get("/", handler.AllMetrics(store))
+	r.Post("/update", handler.UpdateJson(store))
+	r.Post("/value", handler.ValueJson(store))
 
 	if err := runServer(r, config); err != nil {
 		log.Fatal(err)

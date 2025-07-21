@@ -1,5 +1,5 @@
 ### Post counter
-POST http://localhost:8080/update/counter/someMetric2/527
+POST http://localhost:8080/update/counter/someMetric/527
 Content-Type: text/plain
 
 ### Post gauge
@@ -21,3 +21,23 @@ Accept: text/plain
 ### GET
 GET http://localhost:8080/value/counter/someMetric2
 Accept: text/plain
+
+###Post Json update
+POST http://localhost:8080/update
+Content-Type: application/json
+
+{
+  "id": "LastGC2",
+  "type": "counter",
+  "delta": 45
+}
+
+###Post Json value
+POST http://localhost:8080/value
+Content-Type: application/json
+
+{
+  "id": "LastGC2",
+  "type": "counter"
+
+}
