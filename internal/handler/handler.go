@@ -142,7 +142,7 @@ func AllMetrics(store *repository.MemStore) http.HandlerFunc {
 	}
 }
 
-func UpdateJson(store *repository.MemStore) http.HandlerFunc {
+func UpdateJSON(store *repository.MemStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		//Проверяем, что метод POST
 		if r.Method != http.MethodPost {
@@ -196,7 +196,7 @@ func UpdateJson(store *repository.MemStore) http.HandlerFunc {
 	}
 }
 
-func ValueJson(store *repository.MemStore) http.HandlerFunc {
+func ValueJSON(store *repository.MemStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		//Проверяем, что метод POST
 		if r.Method != http.MethodPost {
