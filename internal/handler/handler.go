@@ -247,7 +247,8 @@ func ValueJSON(store *repository.MemStore) http.HandlerFunc {
 			if err != nil {
 				log.Printf("Error marshalling json: %s\n", err)
 			}
-			if _, err := fmt.Fprint(w, " Content-Type: application/json", body); err != nil {
+			w.Header().Set("Content-Type", "application/json")
+			if _, err := fmt.Fprint(w, body); err != nil {
 				log.Printf("Failed to ValueJson: %v", err)
 				w.WriteHeader(http.StatusInternalServerError)
 				return
@@ -269,7 +270,8 @@ func ValueJSON(store *repository.MemStore) http.HandlerFunc {
 			if err != nil {
 				log.Printf("Error marshalling json: %s\n", err)
 			}
-			if _, err := fmt.Fprint(w, " Content-Type: application/json", body); err != nil {
+			w.Header().Set("Content-Type", "application/json")
+			if _, err := fmt.Fprint(w, body); err != nil {
 				log.Printf("Failed to ValueJson: %v", err)
 				w.WriteHeader(http.StatusInternalServerError)
 				return
