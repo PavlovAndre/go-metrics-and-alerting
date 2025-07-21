@@ -3,6 +3,7 @@ package handler
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/PavlovAndre/go-metrics-and-alerting.git/internal/logger"
 	models "github.com/PavlovAndre/go-metrics-and-alerting.git/internal/model"
 	"github.com/PavlovAndre/go-metrics-and-alerting.git/internal/repository"
 	"github.com/go-chi/chi/v5"
@@ -159,7 +160,7 @@ func UpdateJSON(store *repository.MemStore) http.HandlerFunc {
 		}
 
 		err = json.Unmarshal(buf, &req)
-		log.Printf(r.URL.String(), &req)
+		logger.Log.Infow("Test", "error", err, "body", string(buf))
 		if err != nil {
 			log.Printf("Failed to UpdateJson: %v", err)
 			http.Error(w, "internal server error", http.StatusInternalServerError)
@@ -173,10 +174,10 @@ func UpdateJSON(store *repository.MemStore) http.HandlerFunc {
 		}
 
 		//Проверка, что имя метрики не пустое
-		/*if req.ID == "" {
+		if req.ID == "" {
 			http.NotFound(w, r)
 			return
-		}*/
+		}
 
 		//Выполняем обновление значения gauge
 		if req.MType == "gauge" {
@@ -208,6 +209,7 @@ func ValueJSON(store *repository.MemStore) http.HandlerFunc {
 		}
 		var req models.Metrics
 		buf, err := io.ReadAll(r.Body)
+		logger.Log.Infow("Test", "error", err, "body", string(buf))
 		if err != nil {
 			log.Printf("Failed to UpdateJson: %v", err)
 			http.Error(w, "internal server error", http.StatusInternalServerError)
@@ -227,10 +229,10 @@ func ValueJSON(store *repository.MemStore) http.HandlerFunc {
 		}
 
 		//Проверка, что имя метрики не пустое
-		/*if req.ID == "" {
+		if req.ID == "" {
 			http.NotFound(w, r)
 			return
-		}*/
+		}
 
 		if req.MType == "counter" {
 			value, ok := store.GetCounter(req.ID)
@@ -244,7 +246,7 @@ func ValueJSON(store *repository.MemStore) http.HandlerFunc {
 			if err != nil {
 				log.Printf("Error marshalling json: %s\n", err)
 			}
-			if _, err := fmt.Fprint(w, body); err != nil {
+			if _, err := fmt.Fprint(w, "application/json", body); err != nil {
 				log.Printf("Failed to ValueJson: %v", err)
 				w.WriteHeader(http.StatusInternalServerError)
 				return
@@ -265,7 +267,7 @@ func ValueJSON(store *repository.MemStore) http.HandlerFunc {
 			if err != nil {
 				log.Printf("Error marshalling json: %s\n", err)
 			}
-			if _, err := fmt.Fprint(w, body); err != nil {
+			if _, err := fmt.Fprint(w, "application/json", body); err != nil {
 				log.Printf("Failed to ValueJson: %v", err)
 				w.WriteHeader(http.StatusInternalServerError)
 				return

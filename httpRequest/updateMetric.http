@@ -33,7 +33,7 @@ Content-Type: application/json
 }
 
 ###Post Json value
-POST http://localhost:8080/value
+POST http://localhost:8080/value/
 Content-Type: application/json
 
 {
