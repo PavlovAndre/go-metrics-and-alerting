@@ -26,7 +26,7 @@ func main() {
 	}()
 	go func() {
 		defer wg.Done()
-		send.SendMetricsJson()
+		send.SendMetricsJSON()
 	}()
 	wg.Wait()
 
