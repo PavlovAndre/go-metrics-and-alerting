@@ -238,7 +238,7 @@ func ValueJSON(store *repository.MemStore) http.HandlerFunc {
 			value, ok := store.GetCounter(req.ID)
 			if !ok {
 				//http.NotFound(w, r)
-				logger.Log.Infow("Нет метрики ")
+				logger.Log.Infow("Нет метрики")
 				//return
 			}
 
