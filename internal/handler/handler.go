@@ -239,7 +239,7 @@ func ValueJSON(store *repository.MemStore) http.HandlerFunc {
 			if !ok {
 				//http.NotFound(w, r)
 				logger.Log.Infow("Нет метрики")
-				return
+				//return
 			}
 
 			req.Delta = &value
@@ -262,7 +262,7 @@ func ValueJSON(store *repository.MemStore) http.HandlerFunc {
 			if !ok {
 				//http.NotFound(w, r)
 				logger.Log.Infow("Нет метрики ")
-				return
+				//return
 			}
 
 			req.Value = &value
