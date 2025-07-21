@@ -170,10 +170,10 @@ func UpdateJSON(store *repository.MemStore) http.HandlerFunc {
 		}
 
 		//Проверка, что имя метрики не пустое
-		if req.ID == "" {
+		/*if req.ID == "" {
 			http.NotFound(w, r)
 			return
-		}
+		}*/
 
 		//Выполняем обновление значения gauge
 		if req.MType == "gauge" {
@@ -224,10 +224,10 @@ func ValueJSON(store *repository.MemStore) http.HandlerFunc {
 		}
 
 		//Проверка, что имя метрики не пустое
-		if req.ID == "" {
+		/*if req.ID == "" {
 			http.NotFound(w, r)
 			return
-		}
+		}*/
 
 		if req.MType == "counter" {
 			value, ok := store.GetCounter(req.ID)

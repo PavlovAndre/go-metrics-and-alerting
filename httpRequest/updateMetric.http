@@ -23,7 +23,7 @@ GET http://localhost:8080/value/counter/someMetric2
 Accept: text/plain
 
 ###Post Json update
-POST http://localhost:8080/update
+POST http://localhost:8080/update/
 Content-Type: application/json
 
 {
