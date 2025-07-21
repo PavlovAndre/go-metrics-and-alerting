@@ -145,6 +145,7 @@ func AllMetrics(store *repository.MemStore) http.HandlerFunc {
 func UpdateJSON(store *repository.MemStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		//Проверяем, что метод POST
+
 		if r.Method != http.MethodPost {
 			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 			return
@@ -156,7 +157,9 @@ func UpdateJSON(store *repository.MemStore) http.HandlerFunc {
 			http.Error(w, "internal server error", http.StatusInternalServerError)
 			return
 		}
+
 		err = json.Unmarshal(buf, &req)
+		log.Printf(r.URL.String(), &req)
 		if err != nil {
 			log.Printf("Failed to UpdateJson: %v", err)
 			http.Error(w, "internal server error", http.StatusInternalServerError)
