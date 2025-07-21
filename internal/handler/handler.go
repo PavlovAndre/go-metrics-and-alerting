@@ -237,7 +237,8 @@ func ValueJSON(store *repository.MemStore) http.HandlerFunc {
 		if req.MType == "counter" {
 			value, ok := store.GetCounter(req.ID)
 			if !ok {
-				http.NotFound(w, r)
+				//http.NotFound(w, r)
+				logger.Log.Infow("Нет метрики")
 				return
 			}
 
@@ -258,7 +259,8 @@ func ValueJSON(store *repository.MemStore) http.HandlerFunc {
 		if req.MType == "gauge" {
 			value, ok := store.GetGauge(req.ID)
 			if !ok {
-				http.NotFound(w, r)
+				//http.NotFound(w, r)
+				logger.Log.Infow("Нет метрики")
 				return
 			}
 
