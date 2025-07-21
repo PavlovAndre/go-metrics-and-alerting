@@ -12,7 +12,7 @@ import (
 
 func main() {
 
-	// обрабатываем аргументы командной строки
+	// обрабатываем аргументы  командной строки
 	config, err := parseFlags()
 	if err != nil {
 		log.Fatal(err)
