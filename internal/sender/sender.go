@@ -50,7 +50,7 @@ func (s *Sender) SendMetrics() {
 	}
 }
 
-// SendMetricsJSON Функция отправки метрик по JSON
+// SendMetricsJSON Функция отправки метрик по  JSON
 func (s *Sender) SendMetricsJSON() {
 	for {
 		ticker := time.NewTicker(time.Duration(s.reportInterval) * time.Second)
