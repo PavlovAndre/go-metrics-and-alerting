@@ -26,15 +26,18 @@ Accept: text/plain
 POST http://localhost:8080/update/
 Content-Type: application/json
 
+
 {
   "id": "PollCount",
   "type": "counter",
   "delta": 45
+
 }
 
 ###Post Json value
 POST http://localhost:8080/value/
 Content-Type: application/json
+
 
 {
   "id": "PollCount",
@@ -50,6 +53,7 @@ POST /value/ HTTP/1.1
 Host: localhost:8080
 Accept: application/json
 Content-Type: application/json
+Accept-Encoding: -
 User-Agent: go-resty/2.7.0
 
 {

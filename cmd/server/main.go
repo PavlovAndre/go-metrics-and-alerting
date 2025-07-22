@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/PavlovAndre/go-metrics-and-alerting.git/internal/compress"
 	"github.com/PavlovAndre/go-metrics-and-alerting.git/internal/config"
 	"github.com/PavlovAndre/go-metrics-and-alerting.git/internal/handler"
 	"github.com/PavlovAndre/go-metrics-and-alerting.git/internal/logger"
@@ -31,7 +32,7 @@ func main() {
 	store := repository.New()
 
 	r := chi.NewRouter()
-	r.Use(logger.LogRequest, logger.LogResponse)
+	r.Use(logger.LogRequest, logger.LogResponse, compress.GzipMiddleware)
 	r.Post("/update/{type}/{name}/{value}", handler.UpdatePage(store))
 	r.Get("/value/{type}/{name}", handler.GetCountMetric(store))
 	r.Get("/", handler.AllMetrics(store))

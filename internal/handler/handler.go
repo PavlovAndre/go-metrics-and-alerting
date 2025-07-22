@@ -142,7 +142,6 @@ func AllMetrics(store *repository.MemStore) http.HandlerFunc {
 
 	}
 }
-
 func UpdateJSON(store *repository.MemStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		//Проверяем, что метод POST
