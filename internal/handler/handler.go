@@ -209,16 +209,16 @@ func ValueJSON(store *repository.MemStore) http.HandlerFunc {
 		}
 		var req models.Metrics
 		buf, err := io.ReadAll(r.Body)
-		logger.Log.Infow("Test", "error", err, "body", string(buf))
 		if err != nil {
 			log.Printf("Failed to UpdateJson: %v", err)
 			http.Error(w, "internal server error", http.StatusInternalServerError)
 			return
 		}
+		logger.Log.Infow("Test", "error", err, "body", string(buf))
 		err = json.Unmarshal(buf, &req)
 		if err != nil {
 			log.Printf("Failed to UpdateJson: %v", err)
-			http.Error(w, "internal server error", http.StatusInternalServerError)
+			//http.Error(w, "internal server error", http.StatusInternalServerError)
 			return
 		}
 

@@ -41,3 +41,7 @@ Content-Type: application/json
   "type": "counter"
 
 }
+
+###Post EmptyJson value
+POST http://localhost:8080/value/
+Content-Type: application/json
