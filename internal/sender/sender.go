@@ -64,7 +64,7 @@ func (s *Sender) SendMetricsJSON() {
 				body, err := json.Marshal(send)
 				if err != nil {
 					log.Printf("Error marshalling json: %s\n", err)
-					continue
+					return
 				}
 				sendURL := fmt.Sprintf("http://%s/update/", s.addrServer)
 				resp, err := http.Post(sendURL, "application/json", bytes.NewReader(body))
@@ -83,7 +83,7 @@ func (s *Sender) SendMetricsJSON() {
 				body, err := json.Marshal(send)
 				if err != nil {
 					log.Printf("Error marshalling json: %s\n", err)
-					continue
+					return
 				}
 				sendURL := fmt.Sprintf("http://%s/update/", s.addrServer)
 				resp, err := http.Post(sendURL, "application/json", bytes.NewReader(body))
