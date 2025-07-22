@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/PavlovAndre/go-metrics-and-alerting.git/internal/logger"
 	models "github.com/PavlovAndre/go-metrics-and-alerting.git/internal/model"
 	"github.com/PavlovAndre/go-metrics-and-alerting.git/internal/repository"
 	"log"
@@ -57,7 +56,7 @@ func (s *Sender) SendMetricsJSON() {
 	for {
 		ticker := time.NewTicker(time.Duration(s.reportInterval) * time.Second)
 		for range ticker.C {
-			logger.Log.Infow("Starting func collector ")
+			log.Printf("Start func agent")
 			for key, value := range s.memStore.GetGauges() {
 				send := models.Metrics{
 					ID:    key,
@@ -84,7 +83,7 @@ func (s *Sender) SendMetricsJSON() {
 				//}
 				if err != nil {
 					log.Printf("Error posting to %s: %s\n", sendURL, err)
-					return
+					continue
 				}
 				defer resp.Body.Close()
 				fmt.Println(resp)
@@ -112,7 +111,8 @@ func (s *Sender) SendMetricsJSON() {
 				//resp.Body.Close()
 				if err != nil {
 					log.Printf("Error posting to %s: %s\n", sendURL, err)
-					return
+					//return
+					continue
 				}
 				defer resp.Body.Close()
 				fmt.Println(resp)
