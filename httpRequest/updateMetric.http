@@ -53,6 +53,6 @@ Content-Type: application/json
 User-Agent: go-resty/2.7.0
 
 {
-  "id": "GetSet131",
+  "id": "PollCount",
   "type": "counter"
 }

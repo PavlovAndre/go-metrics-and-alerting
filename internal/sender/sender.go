@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/PavlovAndre/go-metrics-and-alerting.git/internal/logger"
 	models "github.com/PavlovAndre/go-metrics-and-alerting.git/internal/model"
 	"github.com/PavlovAndre/go-metrics-and-alerting.git/internal/repository"
 	"log"
@@ -56,6 +57,7 @@ func (s *Sender) SendMetricsJSON() {
 	for {
 		ticker := time.NewTicker(time.Duration(s.reportInterval) * time.Second)
 		for range ticker.C {
+			logger.Log.Infow("Starting func collector ")
 			for key, value := range s.memStore.GetGauges() {
 				send := models.Metrics{
 					ID:    key,

@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/PavlovAndre/go-metrics-and-alerting.git/internal/collector"
+	"github.com/PavlovAndre/go-metrics-and-alerting.git/internal/logger"
 	"github.com/PavlovAndre/go-metrics-and-alerting.git/internal/repository"
 	"github.com/PavlovAndre/go-metrics-and-alerting.git/internal/sender"
 	"log"
@@ -21,10 +22,12 @@ func main() {
 	send := sender.New(store, config.ReportInterval, config.AddrServer)
 
 	go func() {
+		logger.Log.Infow("Starting collector")
 		defer wg.Done()
 		coll.CollectMetrics()
 	}()
 	go func() {
+		logger.Log.Infow("Starting sender")
 		defer wg.Done()
 		send.SendMetricsJSON()
 	}()
