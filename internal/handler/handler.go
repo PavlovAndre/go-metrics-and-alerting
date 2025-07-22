@@ -203,8 +203,7 @@ func UpdateJSON(store *repository.MemStore) http.HandlerFunc {
 func ValueJSON(store *repository.MemStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		//Проверяем, что метод POST
-		//logger.Log.Infow("Test1")
-		//log.Printf("test3")
+
 		if r.Method != http.MethodPost {
 			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 			return
@@ -212,14 +211,15 @@ func ValueJSON(store *repository.MemStore) http.HandlerFunc {
 
 		var req models.Metrics
 		buf, err := io.ReadAll(r.Body)
-		//logger.Log.Infow("Test2")
 		if err != nil {
 			log.Printf("Failed to UpdateJson: %v", err)
 			http.Error(w, "internal server error", http.StatusInternalServerError)
 			return
 		}
+
 		logger.Log.Infow("Test", "body", string(buf))
 		err = json.Unmarshal(buf, &req)
+
 		if err != nil {
 			log.Printf("Failed to UpdateJson: %v", err)
 			//http.Error(w, "internal server error", http.StatusInternalServerError)
@@ -232,6 +232,7 @@ func ValueJSON(store *repository.MemStore) http.HandlerFunc {
 			return
 		}
 		//logger.Log.Infow("Test5")
+
 		//Проверка, что имя метрики не пустое
 		if req.ID == "" {
 			http.NotFound(w, r)
@@ -248,16 +249,20 @@ func ValueJSON(store *repository.MemStore) http.HandlerFunc {
 
 			req.Delta = &value
 			body, err := json.Marshal(req)
+
 			if err != nil {
 				log.Printf("Error marshalling json: %s\n", err)
 				//return
 			}
-			w.Header().Set("Content-Type", "application/json")
-			if _, err := fmt.Fprint(w, body); err != nil {
+
+			/*if _, err := fmt.Fprint(w, body); err != nil {
 				log.Printf("Failed to ValueJson: %v", err)
 				w.WriteHeader(http.StatusInternalServerError)
 				return
-			}
+			}*/
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusOK)
+			w.Write(body)
 			return
 
 		}
@@ -275,12 +280,15 @@ func ValueJSON(store *repository.MemStore) http.HandlerFunc {
 			if err != nil {
 				log.Printf("Error marshalling json: %s\n", err)
 			}
-			w.Header().Set("Content-Type", "application/json")
-			if _, err := fmt.Fprint(w, body); err != nil {
+
+			/*if _, err := fmt.Fprint(w, body); err != nil {
 				log.Printf("Failed to ValueJson: %v", err)
 				w.WriteHeader(http.StatusInternalServerError)
 				return
-			}
+			}*/
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusOK)
+			w.Write(body)
 			return
 
 		}
