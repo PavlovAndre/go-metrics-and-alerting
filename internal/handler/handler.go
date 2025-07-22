@@ -113,7 +113,7 @@ func GetCountMetric(store *repository.MemStore) http.HandlerFunc {
 				http.NotFound(response, r)
 				return
 			}
-			if _, err := fmt.Fprint(response, strconv.FormatFloat(value, 'f', 3, 64)); err != nil {
+			if _, err := fmt.Fprint(response, strconv.FormatFloat(value, 'f', -1, 64)); err != nil {
 				log.Printf("Failed to GetCountMetric: %v", err)
 				response.WriteHeader(http.StatusInternalServerError)
 				return
