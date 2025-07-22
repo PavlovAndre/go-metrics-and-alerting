@@ -68,8 +68,9 @@ func (s *Sender) SendMetricsJSON() {
 					continue
 				}
 				sendURL := fmt.Sprintf("http://%s/update/", s.addrServer)
-				conn, err := net.DialTimeout("tcp", s.addrServer, 1*time.Second)
+				conn, err := net.DialTimeout("tcp", s.addrServer, 0)
 				if err != nil {
+					//logger.Log.Infow("Error connecting to %s: %s\n", sendURL, err)
 					log.Printf("Error connecting to %s: %s\n", sendURL, err)
 					continue
 				}
@@ -94,7 +95,7 @@ func (s *Sender) SendMetricsJSON() {
 					continue
 				}
 				sendURL := fmt.Sprintf("http://%s/update/", s.addrServer)
-				conn, err := net.DialTimeout("tcp", s.addrServer, 1*time.Second)
+				conn, err := net.DialTimeout("tcp", s.addrServer, 0*time.Second)
 				if err != nil {
 					log.Printf("Error connecting to %s: %s\n", sendURL, err)
 					continue
