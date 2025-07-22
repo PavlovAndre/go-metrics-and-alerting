@@ -186,7 +186,7 @@ func UpdateJSON(store *repository.MemStore) http.HandlerFunc {
 				return
 			}
 			store.SetGauge(req.ID, *req.Value)
-			w.Header().Set("Content-Type", "application/json")
+			//w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusOK)
 		}
 
@@ -197,7 +197,7 @@ func UpdateJSON(store *repository.MemStore) http.HandlerFunc {
 				return
 			}
 			store.AddCounter(req.ID, *req.Delta)
-			w.Header().Set("Content-Type", "application/json")
+			//w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusOK)
 		}
 
