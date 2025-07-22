@@ -7,6 +7,7 @@ import (
 	models "github.com/PavlovAndre/go-metrics-and-alerting.git/internal/model"
 	"github.com/PavlovAndre/go-metrics-and-alerting.git/internal/repository"
 	"log"
+	"net"
 	"net/http"
 	"time"
 )
@@ -67,10 +68,17 @@ func (s *Sender) SendMetricsJSON() {
 					continue
 				}
 				sendURL := fmt.Sprintf("http://%s/update/", s.addrServer)
+				conn, err := net.DialTimeout("tcp", s.addrServer, 1*time.Second)
+				if err != nil {
+					log.Printf("Error connecting to %s: %s\n", sendURL, err)
+					continue
+				}
+				conn.Close()
 				resp, err := http.Post(sendURL, "application/json", bytes.NewReader(body))
 				resp.Body.Close()
 				if err != nil {
 					log.Printf("Error posting to %s: %s\n", sendURL, err)
+					return
 				}
 				fmt.Println(resp)
 			}
@@ -86,10 +94,17 @@ func (s *Sender) SendMetricsJSON() {
 					continue
 				}
 				sendURL := fmt.Sprintf("http://%s/update/", s.addrServer)
+				conn, err := net.DialTimeout("tcp", s.addrServer, 1*time.Second)
+				if err != nil {
+					log.Printf("Error connecting to %s: %s\n", sendURL, err)
+					continue
+				}
+				conn.Close()
 				resp, err := http.Post(sendURL, "application/json", bytes.NewReader(body))
 				resp.Body.Close()
 				if err != nil {
 					log.Printf("Error posting to %s: %s\n", sendURL, err)
+					return
 				}
 				fmt.Println(resp)
 
