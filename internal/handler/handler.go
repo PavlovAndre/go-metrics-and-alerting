@@ -203,12 +203,15 @@ func UpdateJSON(store *repository.MemStore) http.HandlerFunc {
 func ValueJSON(store *repository.MemStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		//Проверяем, что метод POST
+		logger.Log.Infow("Test1")
 		if r.Method != http.MethodPost {
 			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 			return
 		}
+
 		var req models.Metrics
 		buf, err := io.ReadAll(r.Body)
+		logger.Log.Infow("Test2")
 		if err != nil {
 			log.Printf("Failed to UpdateJson: %v", err)
 			http.Error(w, "internal server error", http.StatusInternalServerError)
