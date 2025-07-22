@@ -37,12 +37,22 @@ POST http://localhost:8080/value/
 Content-Type: application/json
 
 {
-  "id": "LastGC2",
-  "type": "counter",
-  "value": "4"
-
+  "id": "PollCount",
+  "type": "counter"
 }
 
 ###Post EmptyJson value
 POST http://localhost:8080/value/
 Content-Type: application/json
+
+###Post EmptyJson value
+POST /value/ HTTP/1.1
+Host: localhost:8080
+Accept: application/json
+Content-Type: application/json
+User-Agent: go-resty/2.7.0
+
+{
+  "id": "GetSet131",
+  "type": "counter"
+}

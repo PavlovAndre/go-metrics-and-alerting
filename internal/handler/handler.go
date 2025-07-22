@@ -218,32 +218,32 @@ func ValueJSON(store *repository.MemStore) http.HandlerFunc {
 			http.Error(w, "internal server error", http.StatusInternalServerError)
 			return
 		}
-		logger.Log.Infow("Test", "error", err, "body", string(buf))
+		logger.Log.Infow("Test", "body", string(buf))
 		err = json.Unmarshal(buf, &req)
 		if err != nil {
 			log.Printf("Failed to UpdateJson: %v", err)
 			//http.Error(w, "internal server error", http.StatusInternalServerError)
 			return
 		}
-
+		logger.Log.Infow("Test4")
 		// Проверям, что введен правильный тип метрик
 		if req.MType != "gauge" && req.MType != "counter" {
 			http.Error(w, "Bad type of metric", http.StatusBadRequest)
 			return
 		}
-
+		logger.Log.Infow("Test5")
 		//Проверка, что имя метрики не пустое
 		if req.ID == "" {
 			http.NotFound(w, r)
 			return
 		}
-
+		logger.Log.Infow("Test6")
 		if req.MType == "counter" {
 			value, ok := store.GetCounter(req.ID)
 			if !ok {
-				//http.NotFound(w, r)
 				logger.Log.Infow("Нет метрики")
-				//return
+				http.NotFound(w, r)
+				return
 			}
 
 			req.Delta = &value
@@ -261,7 +261,7 @@ func ValueJSON(store *repository.MemStore) http.HandlerFunc {
 			return
 
 		}
-
+		logger.Log.Infow("Test7")
 		if req.MType == "gauge" {
 			value, ok := store.GetGauge(req.ID)
 			if !ok {
