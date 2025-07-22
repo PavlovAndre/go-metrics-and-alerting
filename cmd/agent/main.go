@@ -10,6 +10,7 @@ import (
 )
 
 func main() {
+	logger.Log.Infow("Starting agent")
 	config, err := parseFlags()
 	if err != nil {
 		log.Fatal(err)
