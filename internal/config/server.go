@@ -2,6 +2,7 @@ package config
 
 type ServerCfg struct {
 	AddrServer string
+	LogLevel   string
 }
 
 type ServerOption func(*ServerCfg)
