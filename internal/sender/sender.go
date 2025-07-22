@@ -78,7 +78,10 @@ func (s *Sender) SendMetricsJSON() {
 				}
 				conn.Close()
 				resp, err := http.Post(sendURL, "application/json", bytes.NewReader(body))
-				resp.Body.Close()
+				err2 := resp.Body.Close()
+				if err2 != nil {
+					return
+				}
 				if err != nil {
 					log.Printf("Error posting to %s: %s\n", sendURL, err)
 					return
