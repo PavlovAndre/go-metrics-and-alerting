@@ -38,7 +38,8 @@ Content-Type: application/json
 
 {
   "id": "LastGC2",
-  "type": "counter"
+  "type": "counter",
+  "value": "4"
 
 }
 
