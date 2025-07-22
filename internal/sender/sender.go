@@ -85,7 +85,7 @@ func (s *Sender) SendMetricsJSON() {
 					log.Printf("Error posting to %s: %s\n", sendURL, err)
 					continue
 				}
-				defer resp.Body.Close()
+				resp.Body.Close()
 				fmt.Println(resp)
 			}
 			for key, value := range s.memStore.GetCounters() {
@@ -114,7 +114,7 @@ func (s *Sender) SendMetricsJSON() {
 					//return
 					continue
 				}
-				defer resp.Body.Close()
+				resp.Body.Close()
 				fmt.Println(resp)
 
 			}
