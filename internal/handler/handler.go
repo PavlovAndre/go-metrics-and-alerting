@@ -218,7 +218,7 @@ func ValueJSON(store *repository.MemStore) http.HandlerFunc {
 		err = json.Unmarshal(buf, &req)
 		if err != nil {
 			log.Printf("Failed to UpdateJson: %v", err)
-			http.Error(w, "internal server error", http.StatusInternalServerError)
+			//http.Error(w, "internal server error", http.StatusInternalServerError)
 			return
 		}
 
@@ -237,16 +237,16 @@ func ValueJSON(store *repository.MemStore) http.HandlerFunc {
 		if req.MType == "counter" {
 			value, ok := store.GetCounter(req.ID)
 			if !ok {
-				http.NotFound(w, r)
+				//http.NotFound(w, r)
 				logger.Log.Infow("Нет метрики")
-				return
+				//return
 			}
 
 			req.Delta = &value
 			body, err := json.Marshal(req)
 			if err != nil {
 				log.Printf("Error marshalling json: %s\n", err)
-				return
+				//return
 			}
 			w.Header().Set("Content-Type", "application/json")
 			if _, err := fmt.Fprint(w, body); err != nil {
