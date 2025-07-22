@@ -204,6 +204,7 @@ func ValueJSON(store *repository.MemStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		//Проверяем, что метод POST
 		logger.Log.Infow("Test1")
+		log.Printf("test3")
 		if r.Method != http.MethodPost {
 			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 			return
