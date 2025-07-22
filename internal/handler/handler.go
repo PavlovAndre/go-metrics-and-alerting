@@ -203,8 +203,8 @@ func UpdateJSON(store *repository.MemStore) http.HandlerFunc {
 func ValueJSON(store *repository.MemStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		//Проверяем, что метод POST
-		logger.Log.Infow("Test1")
-		log.Printf("test3")
+		//logger.Log.Infow("Test1")
+		//log.Printf("test3")
 		if r.Method != http.MethodPost {
 			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 			return
@@ -212,7 +212,7 @@ func ValueJSON(store *repository.MemStore) http.HandlerFunc {
 
 		var req models.Metrics
 		buf, err := io.ReadAll(r.Body)
-		logger.Log.Infow("Test2")
+		//logger.Log.Infow("Test2")
 		if err != nil {
 			log.Printf("Failed to UpdateJson: %v", err)
 			http.Error(w, "internal server error", http.StatusInternalServerError)
@@ -225,19 +225,19 @@ func ValueJSON(store *repository.MemStore) http.HandlerFunc {
 			//http.Error(w, "internal server error", http.StatusInternalServerError)
 			return
 		}
-		logger.Log.Infow("Test4")
+		//logger.Log.Infow("Test4")
 		// Проверям, что введен правильный тип метрик
 		if req.MType != "gauge" && req.MType != "counter" {
 			http.Error(w, "Bad type of metric", http.StatusBadRequest)
 			return
 		}
-		logger.Log.Infow("Test5")
+		//logger.Log.Infow("Test5")
 		//Проверка, что имя метрики не пустое
 		if req.ID == "" {
 			http.NotFound(w, r)
 			return
 		}
-		logger.Log.Infow("Test6")
+		//logger.Log.Infow("Test6")
 		if req.MType == "counter" {
 			value, ok := store.GetCounter(req.ID)
 			if !ok {
