@@ -17,6 +17,7 @@ Accept: text/plain
 ### GET
 GET http://localhost:8080/
 Accept: text/plain
+Accept-Encoding: br
 
 ### GET
 GET http://localhost:8080/value/counter/someMetric2
