@@ -102,10 +102,10 @@ func (s *Sender) SendMetricsJSON() {
 				req.Header.Set("Accept-Encoding", "gzip")
 				resp, err := client.Do(req)
 				if err != nil {
-					log.Printf("ошибка отправки запроса: %w", err)
+					log.Printf("ошибка отправки запроса")
 					continue
 				}
-				defer resp.Body.Close()
+				resp.Body.Close()
 				//fmt.Println(resp)
 			}
 
@@ -142,20 +142,20 @@ func (s *Sender) SendMetricsJSON() {
 				//resp, err := http.Post(sendURL, "application/json", bytes.NewReader(compressBody) /*bytes.NewReader(body)*/)
 
 				//resp.Body.Close()
-				if err != nil {
+				/*if err != nil {
 					log.Printf("Error posting to %s: %s\n", sendURL, err)
 					//return
 					continue
-				}
+				}*/
 				req.Body.Close()
 				req.Header.Set("Content-Encoding", "gzip")
 				req.Header.Set("Accept-Encoding", "gzip")
 				resp, err := client.Do(req)
 				if err != nil {
-					log.Printf("ошибка отправки запроса: %w", err)
+					log.Printf("ошибка отправки запроса")
 					continue
 				}
-				defer resp.Body.Close()
+				resp.Body.Close()
 				fmt.Println(resp)
 			}
 			s.memStore.SetCounter("PollCount", 0)
