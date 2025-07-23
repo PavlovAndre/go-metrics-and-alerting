@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/PavlovAndre/go-metrics-and-alerting.git/internal/compress"
 	models "github.com/PavlovAndre/go-metrics-and-alerting.git/internal/model"
 	"github.com/PavlovAndre/go-metrics-and-alerting.git/internal/repository"
 	"log"
@@ -68,26 +69,46 @@ func (s *Sender) SendMetricsJSON() {
 					log.Printf("Error marshalling json: %s\n", err)
 					continue
 				}
+
+				compressBody, err := compress.GZIPCompress(body)
+				if err != nil {
+					log.Printf("Error compressing json: %s\n", err)
+				}
+
 				sendURL := fmt.Sprintf("http://%s/update/", s.addrServer)
 				conn, err := net.DialTimeout("tcp", s.addrServer, 0)
 				if err != nil {
-					//logger.Log.Infow("Error connecting to %s: %s\n", sendURL, err)
 					log.Printf("Error connecting to %s: %s\n", sendURL, err)
 					continue
 				}
 				conn.Close()
-				resp, err := http.Post(sendURL, "application/json", bytes.NewReader(body))
-				//err2 := resp.Body.Close()
-				//if err2 != nil {
-				//	return
-				//}
+
+				client := &http.Client{}
+
+				req, err := http.NewRequest("POST", sendURL, bytes.NewReader(compressBody))
+				if err != nil {
+					log.Printf("ошибка создания запроса")
+					continue
+				}
+
+				/*resp, err := http.Post(sendURL, "application/json", bytes.NewReader(compressBody))
 				if err != nil {
 					log.Printf("Error posting to %s: %s\n", sendURL, err)
 					continue
 				}
-				resp.Body.Close()
-				fmt.Println(resp)
+				resp.Body.Close()*/
+
+				req.Header.Set("Content-Encoding", "gzip")
+				req.Header.Set("Accept-Encoding", "gzip")
+				resp, err := client.Do(req)
+				if err != nil {
+					log.Printf("ошибка отправки запроса: %w", err)
+					continue
+				}
+				defer resp.Body.Close()
+				//fmt.Println(resp)
 			}
+
 			for key, value := range s.memStore.GetCounters() {
 				send := models.Metrics{
 					ID:    key,
@@ -99,6 +120,11 @@ func (s *Sender) SendMetricsJSON() {
 					log.Printf("Error marshalling json: %s\n", err)
 					continue
 				}
+				compressBody, err := compress.GZIPCompress(body)
+				if err != nil {
+					log.Printf("Error compressing json: %s\n", err)
+				}
+
 				sendURL := fmt.Sprintf("http://%s/update/", s.addrServer)
 				conn, err := net.DialTimeout("tcp", s.addrServer, 0*time.Second)
 				if err != nil {
@@ -106,7 +132,14 @@ func (s *Sender) SendMetricsJSON() {
 					continue
 				}
 				conn.Close()
-				resp, err := http.Post(sendURL, "application/json", bytes.NewReader(body))
+
+				client := &http.Client{}
+				req, err := http.NewRequest("POST", sendURL, bytes.NewReader(compressBody))
+				if err != nil {
+					log.Printf("ошибка создания запроса")
+					continue
+				}
+				//resp, err := http.Post(sendURL, "application/json", bytes.NewReader(compressBody) /*bytes.NewReader(body)*/)
 
 				//resp.Body.Close()
 				if err != nil {
@@ -114,9 +147,16 @@ func (s *Sender) SendMetricsJSON() {
 					//return
 					continue
 				}
-				resp.Body.Close()
+				req.Body.Close()
+				req.Header.Set("Content-Encoding", "gzip")
+				req.Header.Set("Accept-Encoding", "gzip")
+				resp, err := client.Do(req)
+				if err != nil {
+					log.Printf("ошибка отправки запроса: %w", err)
+					continue
+				}
+				defer resp.Body.Close()
 				fmt.Println(resp)
-
 			}
 			s.memStore.SetCounter("PollCount", 0)
 		}

@@ -32,6 +32,8 @@ func main() {
 	store := repository.New()
 
 	r := chi.NewRouter()
+	//r2 := chi.NewRouter()
+	//r.Use(logger.LogRequest, logger.LogResponse /*, compress.GzipMiddleware*/)
 	r.Use(logger.LogRequest, logger.LogResponse, compress.GzipMiddleware)
 	r.Post("/update/{type}/{name}/{value}", handler.UpdatePage(store))
 	r.Get("/value/{type}/{name}", handler.GetCountMetric(store))
