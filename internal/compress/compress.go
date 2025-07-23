@@ -101,11 +101,14 @@ func GzipMiddleware(h http.Handler) http.Handler {
 		supportsGzip := strings.Contains(acceptEncoding, "gzip")
 		logger.Log.Infof("проверка кодирования3 %s, %b", string(acceptEncoding), supportsGzip)
 		if supportsGzip {
-			logger.Log.Infow("проверка кодирования4")
+
+			logger.Log.Infof("проверка кодирования4")
 			// оборачиваем оригинальный http.ResponseWriter новым с поддержкой сжатия
 			cw := newCompressWriter(w)
+			contentType := cw.Header().Get("Content-Type")
+			logger.Log.Infof("проверка кодирования5 %s", string(contentType))
 			cw.Header().Set("Content-Encoding", "gzip")
-			//cw.WriteHeader(http.StatusOK)
+			cw.Header().Set("Content-Type", "text/html")
 			// меняем оригинальный http.ResponseWriter на новый
 			ow = cw
 			// не забываем отправить клиенту все сжатые данные после завершения middleware

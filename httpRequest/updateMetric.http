@@ -17,7 +17,7 @@ Accept: text/plain
 ### GET
 GET http://localhost:8080/
 Accept: text/plain
-Accept-Encoding: br
+
 
 ### GET
 GET http://localhost:8080/value/counter/someMetric2
@@ -61,3 +61,11 @@ User-Agent: go-resty/2.7.0
   "id": "PollCount",
   "type": "counter"
 }
+
+###Get INFO
+
+GET / HTTP/1.1
+Host: localhost:8080
+Accept: text/html
+Accept-Encoding: gzip
+User-Agent: go-resty/2.7.0
