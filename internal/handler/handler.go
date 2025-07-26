@@ -225,7 +225,7 @@ func ValueJSON(store *repository.MemStore) http.HandlerFunc {
 
 		if err != nil {
 			log.Printf("Failed to UpdateJson: %v", err)
-			//http.Error(w, "internal server error", http.StatusInternalServerError)
+			http.Error(w, "internal server error", http.StatusInternalServerError)
 			return
 		}
 		//logger.Log.Infow("Test4")
