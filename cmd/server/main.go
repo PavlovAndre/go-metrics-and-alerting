@@ -9,6 +9,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"log"
 	"net/http"
+	"sync"
 )
 
 func main() {
@@ -28,8 +29,20 @@ func main() {
 	logger.Log = lgr
 	logger.Log.Infow("starting server",
 		"address", config.AddrServer,
-		"logLevel", config.LogLevel)
+		"logLevel", config.LogLevel,
+		"path", config.FileStorage,
+		"restore", config.Restore,
+		"storeInterval", config.StoreInterval)
 	store := repository.New()
+	fileStore := logger.NewFileStorage(store, config.StoreInterval)
+
+	/*settings := logger.FileStorage{
+		Port: 4000,
+		Host: `localhost`,
+	}*/
+	//if err := settings.Save("test.txt" /*config.FileStorage*/); err != nil {
+	//	logger.Log.Fatal(err)
+	//}
 
 	r := chi.NewRouter()
 	//r2 := chi.NewRouter()
@@ -41,9 +54,23 @@ func main() {
 	r.Post("/update/", handler.UpdateJSON(store))
 	r.Post("/value/", handler.ValueJSON(store))
 
+	wg := sync.WaitGroup{}
+	wg.Add(2)
+	go func() {
+		defer wg.Done()
+		fileStore.Write(config.FileStorage)
+		if err != nil {
+			log.Fatal(err)
+		}
+	}()
+
+	//go func() {
+	//	defer wg.Done()
 	if err := runServer(r, config); err != nil {
 		log.Fatal(err)
 	}
+	//}()
+	wg.Wait()
 }
 
 func runServer(router chi.Router, cfg *config.ServerCfg) error {
