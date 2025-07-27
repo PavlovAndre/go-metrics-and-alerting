@@ -130,12 +130,12 @@ func (storage *FileStorage) Read(fname string) {
 	}
 	var req models.Metrics
 	lines := bytes.Split(data, []byte("\n"))
-	for i, line := range lines {
+	for _, line := range lines {
 		if err := json.Unmarshal(line, &req); err != nil {
 			log.Printf("Error unmarshalling json: %s\n", err)
 			return
 		}
-		i = i + 1
+		//i = i + 1
 		log.Printf("result")
 
 		//Выполняем инкремент значения counter
