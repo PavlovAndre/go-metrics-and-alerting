@@ -1,10 +1,14 @@
 package handler
 
 import (
+	"encoding/json"
 	"fmt"
+	"github.com/PavlovAndre/go-metrics-and-alerting.git/internal/logger"
+	models "github.com/PavlovAndre/go-metrics-and-alerting.git/internal/model"
 	"github.com/PavlovAndre/go-metrics-and-alerting.git/internal/repository"
 	"github.com/go-chi/chi/v5"
 	"html/template"
+	"io"
 	"log"
 	"net/http"
 	"strconv"
@@ -109,7 +113,7 @@ func GetCountMetric(store *repository.MemStore) http.HandlerFunc {
 				http.NotFound(response, r)
 				return
 			}
-			if _, err := fmt.Fprint(response, strconv.FormatFloat(value, 'f', 3, 64)); err != nil {
+			if _, err := fmt.Fprint(response, strconv.FormatFloat(value, 'f', -1, 64)); err != nil {
 				log.Printf("Failed to GetCountMetric: %v", err)
 				response.WriteHeader(http.StatusInternalServerError)
 				return
@@ -134,6 +138,147 @@ func AllMetrics(store *repository.MemStore) http.HandlerFunc {
 			log.Printf("Failed to Allmetrics: %v", err)
 			response.WriteHeader(http.StatusInternalServerError)
 			return
+		}
+
+	}
+}
+func UpdateJSON(store *repository.MemStore) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		//Проверяем, что метод POST
+
+		if r.Method != http.MethodPost {
+			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+		var req models.Metrics
+		buf, err := io.ReadAll(r.Body)
+		if err != nil {
+			log.Printf("Failed to UpdateJson: %v", err)
+			http.Error(w, "internal server error", http.StatusInternalServerError)
+			return
+		}
+
+		err = json.Unmarshal(buf, &req)
+		logger.Log.Infow("Test", "error", err, "body", string(buf))
+		if err != nil {
+			log.Printf("Failed to UpdateJson: %v", err)
+			http.Error(w, "internal server error", http.StatusInternalServerError)
+			return
+		}
+
+		// Проверям, что введен правильный тип метрик
+		if req.MType != "gauge" && req.MType != "counter" {
+			http.Error(w, "Bad type of metric", http.StatusBadRequest)
+			return
+		}
+
+		//Проверка, что имя метрики не пустое
+		if req.ID == "" {
+			http.NotFound(w, r)
+			return
+		}
+
+		//Выполняем обновление значения gauge
+		if req.MType == "gauge" {
+			if req.Value == nil {
+				http.Error(w, "Bad value", http.StatusBadRequest)
+				return
+			}
+			store.SetGauge(req.ID, *req.Value)
+			w.WriteHeader(http.StatusOK)
+		}
+
+		//Выполняем инкремент значения counter
+		if req.MType == "counter" {
+			if req.Delta == nil {
+				http.Error(w, "Bad value", http.StatusBadRequest)
+				return
+			}
+			store.AddCounter(req.ID, *req.Delta)
+			w.WriteHeader(http.StatusOK)
+		}
+
+	}
+}
+
+func ValueJSON(store *repository.MemStore) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		//Проверяем, что метод POST
+
+		if r.Method != http.MethodPost {
+			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+
+		var req models.Metrics
+		buf, err := io.ReadAll(r.Body)
+		if err != nil {
+			log.Printf("Failed to UpdateJson: %v", err)
+			http.Error(w, "internal server error", http.StatusInternalServerError)
+			return
+		}
+
+		logger.Log.Infow("Test", "body", string(buf))
+		err = json.Unmarshal(buf, &req)
+
+		if err != nil {
+			log.Printf("Failed to UpdateJson: %v", err)
+			http.Error(w, "internal server error", http.StatusInternalServerError)
+			return
+		}
+		// Проверям, что введен правильный тип метрик
+		if req.MType != "gauge" && req.MType != "counter" {
+			http.Error(w, "Bad type of metric", http.StatusBadRequest)
+			return
+		}
+
+		//Проверка, что имя метрики не пустое
+		if req.ID == "" {
+			http.NotFound(w, r)
+			return
+		}
+		if req.MType == "counter" {
+			value, ok := store.GetCounter(req.ID)
+			if !ok {
+				logger.Log.Infow("Нет метрики")
+				http.NotFound(w, r)
+				return
+			}
+
+			req.Delta = &value
+			body, err := json.Marshal(req)
+
+			if err != nil {
+				log.Printf("Error marshalling json: %s\n", err)
+				//return
+			}
+
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusOK)
+			w.Write(body)
+			return
+
+		}
+		logger.Log.Infow("Test7")
+		if req.MType == "gauge" {
+			value, ok := store.GetGauge(req.ID)
+			if !ok {
+				http.NotFound(w, r)
+				logger.Log.Infow("Нет метрики ")
+				return
+			}
+
+			req.Value = &value
+			body, err := json.Marshal(req)
+			if err != nil {
+				log.Printf("Error marshalling json: %s\n", err)
+			}
+
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusOK)
+			w.Write(body)
+			return
+
 		}
 
 	}
