@@ -9,7 +9,10 @@ import (
 	"github.com/go-chi/chi/v5"
 	"log"
 	"net/http"
+	"os"
+	"os/signal"
 	"sync"
+	"syscall"
 )
 
 func main() {
@@ -21,8 +24,8 @@ func main() {
 	}
 
 	// Канал для сигналов
-	//quit := make(chan os.Signal, 1)
-	//signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 
 	// Инициализируем логер
 	lgr, err := logger.New(config.LogLevel)
@@ -62,7 +65,7 @@ func main() {
 	r.Post("/value/", handler.ValueJSON(store))
 
 	wg := sync.WaitGroup{}
-	wg.Add(2)
+	wg.Add(3)
 	go func() {
 		defer wg.Done()
 		fileStore.Write(config.FileStorage)
@@ -77,14 +80,19 @@ func main() {
 			log.Fatal(err)
 		}
 	}()
-	// Ожидание сигнала
-	//<-quit
-	//log.Println("Получен сигнал завершения")
-	//fileStore.WriteEnd(config.FileStorage)
-	//os.Exit(0)
+
+	go func() {
+		defer wg.Done()
+		// Ожидание сигнала
+		<-quit
+		log.Println("Получен сигнал завершения")
+		fileStore.WriteEnd(config.FileStorage)
+		os.Exit(0)
+	}()
 
 	wg.Wait()
 	logger.Log.Infow("server stopped")
+
 }
 
 func runServer(router chi.Router, cfg *config.ServerCfg) error {
