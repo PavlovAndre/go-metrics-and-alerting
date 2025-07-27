@@ -136,7 +136,7 @@ func (storage *FileStorage) Read(fname string) {
 			return
 		}
 		i = i + 1
-		log.Printf("result: ", req)
+		log.Printf("result")
 
 		//Выполняем инкремент значения counter
 		if req.MType == "counter" {
@@ -144,7 +144,7 @@ func (storage *FileStorage) Read(fname string) {
 				return
 			}
 			storage.memStore.AddCounter(req.ID, *req.Delta)
-			log.Printf("result: ", req.ID)
+			log.Printf("result:")
 		}
 
 		if req.MType == "gauge" {
@@ -152,7 +152,7 @@ func (storage *FileStorage) Read(fname string) {
 				return
 			}
 			storage.memStore.SetGauge(req.ID, *req.Value)
-			log.Printf("result: ", req.ID)
+			log.Printf("result: ")
 		}
 	}
 }

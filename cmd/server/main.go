@@ -9,10 +9,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"log"
 	"net/http"
-	"os"
-	"os/signal"
 	"sync"
-	"syscall"
 )
 
 func main() {
@@ -24,8 +21,8 @@ func main() {
 	}
 
 	// Канал для сигналов
-	quit := make(chan os.Signal, 1)
-	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	//quit := make(chan os.Signal, 1)
+	//signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 
 	// Инициализируем логер
 	lgr, err := logger.New(config.LogLevel)
@@ -81,10 +78,10 @@ func main() {
 		}
 	}()
 	// Ожидание сигнала
-	<-quit
-	log.Println("Получен сигнал завершения")
-	fileStore.WriteEnd(config.FileStorage)
-	os.Exit(0)
+	//<-quit
+	//log.Println("Получен сигнал завершения")
+	//fileStore.WriteEnd(config.FileStorage)
+	//os.Exit(0)
 
 	wg.Wait()
 	logger.Log.Infow("server stopped")
