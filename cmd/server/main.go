@@ -9,7 +9,10 @@ import (
 	"github.com/go-chi/chi/v5"
 	"log"
 	"net/http"
+	"os"
+	"os/signal"
 	"sync"
+	"syscall"
 )
 
 func main() {
@@ -19,6 +22,10 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	// Канал для сигналов
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 
 	// Инициализируем логер
 	lgr, err := logger.New(config.LogLevel)
@@ -34,6 +41,7 @@ func main() {
 		"restore", config.Restore,
 		"storeInterval", config.StoreInterval)
 	store := repository.New()
+
 	fileStore := logger.NewFileStorage(store, config.StoreInterval)
 
 	/*settings := logger.FileStorage{
@@ -43,7 +51,9 @@ func main() {
 	//if err := settings.Save("test.txt" /*config.FileStorage*/); err != nil {
 	//	logger.Log.Fatal(err)
 	//}
-
+	if config.Restore {
+		fileStore.Read(config.FileStorage)
+	}
 	r := chi.NewRouter()
 	//r2 := chi.NewRouter()
 	//r.Use(logger.LogRequest, logger.LogResponse /*, compress.GzipMiddleware*/)
@@ -64,13 +74,20 @@ func main() {
 		}
 	}()
 
-	//go func() {
-	//	defer wg.Done()
-	if err := runServer(r, config); err != nil {
-		log.Fatal(err)
-	}
-	//}()
+	go func() {
+		defer wg.Done()
+		if err := runServer(r, config); err != nil {
+			log.Fatal(err)
+		}
+	}()
+	// Ожидание сигнала
+	<-quit
+	log.Println("Получен сигнал завершения")
+	fileStore.WriteEnd(config.FileStorage)
+	os.Exit(0)
+
 	wg.Wait()
+	logger.Log.Infow("server stopped")
 }
 
 func runServer(router chi.Router, cfg *config.ServerCfg) error {

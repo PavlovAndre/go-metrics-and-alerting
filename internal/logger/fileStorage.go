@@ -1,6 +1,7 @@
 package logger
 
 import (
+	"bytes"
 	"encoding/json"
 	models "github.com/PavlovAndre/go-metrics-and-alerting.git/internal/model"
 	"github.com/PavlovAndre/go-metrics-and-alerting.git/internal/repository"
@@ -58,8 +59,11 @@ func (storage *FileStorage) Save(fname string) error {
 			log.Printf("Error marshalling json: %s\n", err)
 			continue
 		}
+		if len(writeText) > 0 {
+			writeText = append(writeText, '\n')
+		}
 		writeText = append(writeText, body...)
-		writeText = append(writeText, '\n')
+		//writeText = append(writeText, '\n')
 	}
 	for key, value := range storage.memStore.GetCounters() {
 		send := models.Metrics{
@@ -72,8 +76,11 @@ func (storage *FileStorage) Save(fname string) error {
 			log.Printf("Error marshalling json: %s\n", err)
 			continue
 		}
+		if len(writeText) > 0 {
+			writeText = append(writeText, '\n')
+		}
 		writeText = append(writeText, body...)
-		writeText = append(writeText, '\n')
+		//writeText = append(writeText, '\n')
 	}
 	/*data, err := json.MarshalIndent(storage.memStore.GetGauges(), "", "   ")
 	if err != nil {
@@ -95,8 +102,57 @@ func (storage *FileStorage) Write(fname string) {
 		for range ticker.C {
 			log.Printf("Запись в файл 2")
 			if err := storage.Save(fname /*config.FileStorage*/); err != nil {
+				log.Printf("Write fileStorage %s", err)
 			}
 
+		}
+	}
+}
+
+func (storage *FileStorage) WriteEnd(fname string) {
+	/*settings := logger.FileStorage{
+		Port: 4000,
+		Host: `localhost`,
+	}*/
+	log.Printf("Запись в файл перед завершением")
+	if err := storage.Save(fname /*config.FileStorage*/); err != nil {
+		log.Printf("Write fileStorage %s", err)
+	}
+
+}
+
+func (storage *FileStorage) Read(fname string) {
+	log.Printf("Чтение из файла")
+	data, err := os.ReadFile(fname)
+	if err != nil {
+		log.Printf("Read fileStorage %s", err)
+		return
+	}
+	var req models.Metrics
+	lines := bytes.Split(data, []byte("\n"))
+	for i, line := range lines {
+		if err := json.Unmarshal(line, &req); err != nil {
+			log.Printf("Error unmarshalling json: %s\n", err)
+			return
+		}
+		i = i + 1
+		log.Printf("result: ", req)
+
+		//Выполняем инкремент значения counter
+		if req.MType == "counter" {
+			if req.Delta == nil {
+				return
+			}
+			storage.memStore.AddCounter(req.ID, *req.Delta)
+			log.Printf("result: ", req.ID)
+		}
+
+		if req.MType == "gauge" {
+			if req.Value == nil {
+				return
+			}
+			storage.memStore.SetGauge(req.ID, *req.Value)
+			log.Printf("result: ", req.ID)
 		}
 	}
 }
