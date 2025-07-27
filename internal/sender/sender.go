@@ -91,13 +91,6 @@ func (s *Sender) SendMetricsJSON() {
 					continue
 				}
 
-				/*resp, err := http.Post(sendURL, "application/json", bytes.NewReader(compressBody))
-				if err != nil {
-					log.Printf("Error posting to %s: %s\n", sendURL, err)
-					continue
-				}
-				resp.Body.Close()*/
-
 				req.Header.Set("Content-Encoding", "gzip")
 				req.Header.Set("Accept-Encoding", "gzip")
 				resp, err := client.Do(req)
@@ -139,14 +132,6 @@ func (s *Sender) SendMetricsJSON() {
 					log.Printf("ошибка создания запроса")
 					continue
 				}
-				//resp, err := http.Post(sendURL, "application/json", bytes.NewReader(compressBody) /*bytes.NewReader(body)*/)
-
-				//resp.Body.Close()
-				/*if err != nil {
-					log.Printf("Error posting to %s: %s\n", sendURL, err)
-					//return
-					continue
-				}*/
 				req.Body.Close()
 				req.Header.Set("Content-Encoding", "gzip")
 				req.Header.Set("Accept-Encoding", "gzip")

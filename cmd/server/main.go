@@ -44,19 +44,11 @@ func main() {
 
 	fileStore := logger.NewFileStorage(store, config.StoreInterval)
 
-	/*settings := logger.FileStorage{
-		Port: 4000,
-		Host: `localhost`,
-	}*/
-	//if err := settings.Save("test.txt" /*config.FileStorage*/); err != nil {
-	//	logger.Log.Fatal(err)
-	//}
 	if config.Restore {
 		fileStore.Read(config.FileStorage)
 	}
 	r := chi.NewRouter()
-	//r2 := chi.NewRouter()
-	//r.Use(logger.LogRequest, logger.LogResponse /*, compress.GzipMiddleware*/)
+
 	r.Use(logger.LogRequest, logger.LogResponse, compress.GzipMiddleware)
 	r.Post("/update/{type}/{name}/{value}", handler.UpdatePage(store))
 	r.Get("/value/{type}/{name}", handler.GetCountMetric(store))
@@ -96,10 +88,5 @@ func main() {
 }
 
 func runServer(router chi.Router, cfg *config.ServerCfg) error {
-	/*if err := logger.Initialize(cfg.LogLevel); err != nil {
-		return err
-	}
-	logger.Log.Info("Running server", zap.String("address", cfg.AddrServer))*/
-	//fmt.Println("Starting server", cfg.AddrServer)
 	return http.ListenAndServe(cfg.AddrServer, router)
 }

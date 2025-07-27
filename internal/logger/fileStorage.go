@@ -10,27 +10,6 @@ import (
 	"time"
 )
 
-/*import "os"
-
-type Storage struct {
-	file *os.File
-}
-
-func NewStore(filename string) (*Storage, error) {
-	// открываем файл для записи
-	file, err := os.OpenFile(filename, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0666)
-	if err != nil {
-		return nil, err
-	}
-	return &Storage{file: file}, nil
-}
-
-func (s *Storage) Close() error {
-	// закрываем файл
-	return s.file.Close()
-}
-*/
-
 type FileStorage2 struct {
 	Port int    `json:"port"`
 	Host string `json:"host"`
@@ -80,21 +59,12 @@ func (storage *FileStorage) Save(fname string) error {
 			writeText = append(writeText, '\n')
 		}
 		writeText = append(writeText, body...)
-		//writeText = append(writeText, '\n')
 	}
-	/*data, err := json.MarshalIndent(storage.memStore.GetGauges(), "", "   ")
-	if err != nil {
-		return err
-	}*/
 	// сохраняем данные в файл
 	return os.WriteFile(fname, writeText, 0666)
 }
 
 func (storage *FileStorage) Write(fname string) {
-	/*settings := logger.FileStorage{
-		Port: 4000,
-		Host: `localhost`,
-	}*/
 	log.Printf("Запись в файл 0")
 	for {
 		log.Printf("Запись в файл 1")
@@ -110,10 +80,6 @@ func (storage *FileStorage) Write(fname string) {
 }
 
 func (storage *FileStorage) WriteEnd(fname string) {
-	/*settings := logger.FileStorage{
-		Port: 4000,
-		Host: `localhost`,
-	}*/
 	log.Printf("Запись в файл перед завершением")
 	if err := storage.Save(fname /*config.FileStorage*/); err != nil {
 		log.Printf("Write fileStorage %s", err)
@@ -135,7 +101,6 @@ func (storage *FileStorage) Read(fname string) {
 			log.Printf("Error unmarshalling json: %s\n", err)
 			return
 		}
-		//i = i + 1
 		log.Printf("result")
 
 		//Выполняем инкремент значения counter

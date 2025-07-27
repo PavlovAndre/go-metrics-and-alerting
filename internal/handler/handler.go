@@ -185,7 +185,6 @@ func UpdateJSON(store *repository.MemStore) http.HandlerFunc {
 				return
 			}
 			store.SetGauge(req.ID, *req.Value)
-			//w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusOK)
 		}
 
@@ -196,7 +195,6 @@ func UpdateJSON(store *repository.MemStore) http.HandlerFunc {
 				return
 			}
 			store.AddCounter(req.ID, *req.Delta)
-			//w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusOK)
 		}
 
@@ -228,20 +226,17 @@ func ValueJSON(store *repository.MemStore) http.HandlerFunc {
 			http.Error(w, "internal server error", http.StatusInternalServerError)
 			return
 		}
-		//logger.Log.Infow("Test4")
 		// Проверям, что введен правильный тип метрик
 		if req.MType != "gauge" && req.MType != "counter" {
 			http.Error(w, "Bad type of metric", http.StatusBadRequest)
 			return
 		}
-		//logger.Log.Infow("Test5")
 
 		//Проверка, что имя метрики не пустое
 		if req.ID == "" {
 			http.NotFound(w, r)
 			return
 		}
-		//logger.Log.Infow("Test6")
 		if req.MType == "counter" {
 			value, ok := store.GetCounter(req.ID)
 			if !ok {
@@ -258,11 +253,6 @@ func ValueJSON(store *repository.MemStore) http.HandlerFunc {
 				//return
 			}
 
-			/*if _, err := fmt.Fprint(w, body); err != nil {
-				log.Printf("Failed to ValueJson: %v", err)
-				w.WriteHeader(http.StatusInternalServerError)
-				return
-			}*/
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusOK)
 			w.Write(body)
@@ -284,11 +274,6 @@ func ValueJSON(store *repository.MemStore) http.HandlerFunc {
 				log.Printf("Error marshalling json: %s\n", err)
 			}
 
-			/*if _, err := fmt.Fprint(w, body); err != nil {
-				log.Printf("Failed to ValueJson: %v", err)
-				w.WriteHeader(http.StatusInternalServerError)
-				return
-			}*/
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusOK)
 			w.Write(body)
