@@ -98,7 +98,7 @@ func restore(fs *flag.FlagSet) config.ServerOption {
 func databaseDSN(fs *flag.FlagSet) config.ServerOption {
 	var databaseFlag string
 	fs.StringVar(&databaseFlag, "d",
-		"host=localhost user=postgres password=1Qaz2wsx dbname=videos sslmode=disable",
+		"", //"host=localhost user=postgres password=1Qaz2wsx dbname=videos sslmode=disable"
 		"connection string for database")
 
 	return func(cfg *config.ServerCfg) {
