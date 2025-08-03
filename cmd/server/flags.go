@@ -103,7 +103,7 @@ func databaseDSN(fs *flag.FlagSet) config.ServerOption {
 
 	return func(cfg *config.ServerCfg) {
 		if env := os.Getenv("DATABASE_DSN"); env != "" {
-			cfg.LogLevel = env
+			cfg.Database = env
 			return
 		}
 		cfg.Database = databaseFlag
