@@ -262,7 +262,6 @@ func ValueJSON(store *repository.MemStore) http.HandlerFunc {
 			return
 
 		}
-		logger.Log.Infow("Test7")
 		if req.MType == "gauge" {
 			value, ok := store.GetGauge(req.ID)
 			if !ok {
@@ -299,7 +298,7 @@ func GetPing(db *sql.DB) http.HandlerFunc {
 		defer cancel()
 		err := db.PingContext(ctx)
 		if err != nil {
-			fmt.Println("ошибка подключения к бд")
+			logger.Log.Infow("Ошибка подключения к бд")
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
