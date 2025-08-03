@@ -293,15 +293,17 @@ func GetPing(db *sql.DB) http.HandlerFunc {
 			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 			return
 		}
-
+		logger.Log.Infow("Ping start")
 		ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 		defer cancel()
 		err := db.PingContext(ctx)
 		if err != nil {
+			logger.Log.Infow("Error pinging database: ", err)
 			http.Error(w, "unable to ping database", http.StatusInternalServerError)
 			//w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
+		logger.Log.Infow("Ping done")
 		w.WriteHeader(http.StatusOK)
 	}
 }
