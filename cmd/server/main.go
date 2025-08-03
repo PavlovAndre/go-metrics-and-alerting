@@ -35,6 +35,10 @@ func main() {
 		log.Fatal(err)
 	}
 
+	/*//Контекст
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()*/
+
 	logger.Log = lgr
 	logger.Log.Infow("starting server",
 		"address", config.AddrServer,

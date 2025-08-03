@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"database/sql"
 	"encoding/json"
 	"fmt"
@@ -13,6 +14,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"time"
 )
 
 type Handler struct {
@@ -293,7 +295,9 @@ func GetPing(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
-		err := db.Ping()
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+		err := db.PingContext(ctx)
 		if err != nil {
 			fmt.Println("ошибка подключения к бд")
 			w.WriteHeader(http.StatusInternalServerError)
