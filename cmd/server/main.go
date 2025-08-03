@@ -7,6 +7,7 @@ import (
 	"github.com/PavlovAndre/go-metrics-and-alerting.git/internal/handler"
 	"github.com/PavlovAndre/go-metrics-and-alerting.git/internal/logger"
 	"github.com/PavlovAndre/go-metrics-and-alerting.git/internal/repository"
+	"github.com/PavlovAndre/go-metrics-and-alerting.git/migrations"
 	"github.com/go-chi/chi/v5"
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"log"
@@ -59,6 +60,18 @@ func main() {
 		log.Fatal(err)
 	}
 	defer db.Close()
+
+	if config.Database != "" {
+		logger.Log.Info("Migrate migrations")
+		// Применим миграции
+		migrator, err := migrations.Migrations()
+		if err != nil {
+			logger.Log.Infow("failed to create migrations", "error", err)
+		}
+		if err = migrator.Migrate(db); err != nil {
+			logger.Log.Infow("failed to migrate", "error", err)
+		}
+	}
 
 	if config.Restore {
 		fileStore.Read(config.FileStorage)
