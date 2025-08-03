@@ -300,7 +300,5 @@ func GetPing(db *sql.DB) http.HandlerFunc {
 			return
 		}
 		w.WriteHeader(http.StatusOK)
-		return
-
 	}
 }
