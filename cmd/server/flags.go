@@ -15,6 +15,7 @@ func parseFlags() (*config.ServerCfg, error) {
 		storeInterval(fs),
 		fileStorage(fs),
 		restore(fs),
+		databaseDSN(fs),
 	}
 
 	err := fs.Parse(os.Args[1:])
@@ -70,10 +71,10 @@ func fileStorage(fs *flag.FlagSet) config.ServerOption {
 	fs.StringVar(&fileStorageFlag, "f", "storage.txt", "path to file storage to use")
 
 	return func(cfg *config.ServerCfg) {
-		/*if env := os.Getenv("FILE_STORAGE_PATH"); env != "" {
+		if env := os.Getenv("FILE_STORAGE_PATH"); env != "" {
 			cfg.FileStorage = env
 			return
-		}*/
+		}
 		cfg.FileStorage = fileStorageFlag
 	}
 }
@@ -91,5 +92,20 @@ func restore(fs *flag.FlagSet) config.ServerOption {
 			return
 		}
 		cfg.Restore = restoreFlag
+	}
+}
+
+func databaseDSN(fs *flag.FlagSet) config.ServerOption {
+	var databaseFlag string
+	fs.StringVar(&databaseFlag, "d",
+		"host=localhost user=postgres password=1Qaz2wsx2 dbname=videos sslmode=disable",
+		"connection string for database")
+
+	return func(cfg *config.ServerCfg) {
+		if env := os.Getenv("DATABASE_DSN"); env != "" {
+			cfg.LogLevel = env
+			return
+		}
+		cfg.Database = databaseFlag
 	}
 }

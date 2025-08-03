@@ -1,12 +1,14 @@
 package main
 
 import (
+	"database/sql"
 	"github.com/PavlovAndre/go-metrics-and-alerting.git/internal/compress"
 	"github.com/PavlovAndre/go-metrics-and-alerting.git/internal/config"
 	"github.com/PavlovAndre/go-metrics-and-alerting.git/internal/handler"
 	"github.com/PavlovAndre/go-metrics-and-alerting.git/internal/logger"
 	"github.com/PavlovAndre/go-metrics-and-alerting.git/internal/repository"
 	"github.com/go-chi/chi/v5"
+	_ "github.com/jackc/pgx/v5/stdlib"
 	"log"
 	"net/http"
 	"os"
@@ -39,10 +41,20 @@ func main() {
 		"logLevel", config.LogLevel,
 		"path", config.FileStorage,
 		"restore", config.Restore,
-		"storeInterval", config.StoreInterval)
+		"storeInterval", config.StoreInterval,
+		"database", config.Database)
 	store := repository.New()
 
 	fileStore := logger.NewFileStorage(store, config.StoreInterval)
+
+	//Подключение к базе
+	ps := config.Database
+	db, err := sql.Open("pgx", ps)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer db.Close()
 
 	if config.Restore {
 		fileStore.Read(config.FileStorage)
@@ -55,6 +67,7 @@ func main() {
 	r.Get("/", handler.AllMetrics(store))
 	r.Post("/update/", handler.UpdateJSON(store))
 	r.Post("/value/", handler.ValueJSON(store))
+	r.Get("/ping", handler.GetPing(db))
 
 	wg := sync.WaitGroup{}
 	wg.Add(3)

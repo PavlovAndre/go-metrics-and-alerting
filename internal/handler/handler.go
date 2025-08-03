@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"github.com/PavlovAndre/go-metrics-and-alerting.git/internal/logger"
@@ -280,6 +281,26 @@ func ValueJSON(store *repository.MemStore) http.HandlerFunc {
 			return
 
 		}
+
+	}
+}
+
+func GetPing(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		//Проверяем, что метод Get
+		if r.Method != http.MethodGet {
+			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+
+		err := db.Ping()
+		if err != nil {
+			fmt.Println("ошибка подключения к бд")
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		w.WriteHeader(http.StatusOK)
+		return
 
 	}
 }

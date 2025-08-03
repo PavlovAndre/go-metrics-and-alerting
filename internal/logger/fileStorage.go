@@ -65,16 +65,13 @@ func (storage *FileStorage) Save(fname string) error {
 }
 
 func (storage *FileStorage) Write(fname string) {
-	log.Printf("Запись в файл 0")
 	for {
-		log.Printf("Запись в файл 1")
 		ticker := time.NewTicker(time.Duration(5) * time.Second)
 		for range ticker.C {
-			log.Printf("Запись в файл 2")
+			//log.Printf("Запись в файл 2")
 			if err := storage.Save(fname /*config.FileStorage*/); err != nil {
 				log.Printf("Write fileStorage %s", err)
 			}
-
 		}
 	}
 }
@@ -101,7 +98,6 @@ func (storage *FileStorage) Read(fname string) {
 			log.Printf("Error unmarshalling json: %s\n", err)
 			return
 		}
-		log.Printf("result")
 
 		//Выполняем инкремент значения counter
 		if req.MType == "counter" {
@@ -109,7 +105,6 @@ func (storage *FileStorage) Read(fname string) {
 				return
 			}
 			storage.memStore.AddCounter(req.ID, *req.Delta)
-			log.Printf("result:")
 		}
 
 		if req.MType == "gauge" {
@@ -117,7 +112,6 @@ func (storage *FileStorage) Read(fname string) {
 				return
 			}
 			storage.memStore.SetGauge(req.ID, *req.Value)
-			log.Printf("result: ")
 		}
 	}
 }

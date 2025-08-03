@@ -77,3 +77,7 @@ Host: localhost:8080
 Accept: application/json
 Content-Type: application/json
 User-Agent: go-resty/2.7.0
+
+###Get Ping
+GET http://localhost:8080/ping
+Accept: text/plain
