@@ -298,8 +298,8 @@ func GetPing(db *sql.DB) http.HandlerFunc {
 		defer cancel()
 		err := db.PingContext(ctx)
 		if err != nil {
-			logger.Log.Infow("Ошибка подключения к бд")
-			w.WriteHeader(http.StatusInternalServerError)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			//w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
 		w.WriteHeader(http.StatusOK)
