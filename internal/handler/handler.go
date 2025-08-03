@@ -294,11 +294,11 @@ func GetPing(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
-		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 		defer cancel()
 		err := db.PingContext(ctx)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			http.Error(w, "unable to ping database", http.StatusInternalServerError)
 			//w.WriteHeader(http.StatusInternalServerError)
 			return
 		}

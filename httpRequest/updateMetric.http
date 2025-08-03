@@ -79,5 +79,8 @@ Content-Type: application/json
 User-Agent: go-resty/2.7.0
 
 ###Get Ping
-GET http://localhost:8080/ping
-Accept: text/plain
+GET /ping HTTP/1.1
+Host: localhost:8080
+Accept: text/html
+Accept-Encoding: gzip
+User-Agent: go-resty/2.7.0
