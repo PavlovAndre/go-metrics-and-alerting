@@ -68,7 +68,7 @@ func storeInterval(fs *flag.FlagSet) config.ServerOption {
 
 func fileStorage(fs *flag.FlagSet) config.ServerOption {
 	var fileStorageFlag string
-	fs.StringVar(&fileStorageFlag, "f", "storage.txt", "path to file storage to use")
+	fs.StringVar(&fileStorageFlag, "f", "" /*"storage.txt"*/, "path to file storage to use")
 
 	return func(cfg *config.ServerCfg) {
 		if env := os.Getenv("FILE_STORAGE_PATH"); env != "" {
@@ -81,7 +81,7 @@ func fileStorage(fs *flag.FlagSet) config.ServerOption {
 
 func restore(fs *flag.FlagSet) config.ServerOption {
 	var restoreFlag bool
-	fs.BoolVar(&restoreFlag, "r", true, "need to restore metrics")
+	fs.BoolVar(&restoreFlag, "r", false, "need to restore metrics")
 
 	return func(cfg *config.ServerCfg) {
 		if env := os.Getenv("RESTORE"); env != "" {

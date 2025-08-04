@@ -90,10 +90,13 @@ func main() {
 	wg.Add(3)
 	go func() {
 		defer wg.Done()
-		fileStore.Write(config.FileStorage)
-		if err != nil {
-			log.Fatal(err)
+		if config.FileStorage != "" {
+			fileStore.Write(config.FileStorage)
+			if err != nil {
+				log.Fatal(err)
+			}
 		}
+
 	}()
 
 	go func() {
@@ -108,7 +111,9 @@ func main() {
 		// Ожидание сигнала
 		<-quit
 		log.Println("Получен сигнал завершения")
-		fileStore.WriteEnd(config.FileStorage)
+		if config.FileStorage != "" {
+			fileStore.WriteEnd(config.FileStorage)
+		}
 		os.Exit(0)
 	}()
 
