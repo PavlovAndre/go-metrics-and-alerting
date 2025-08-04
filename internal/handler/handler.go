@@ -162,7 +162,7 @@ func UpdateJSON(store *repository.MemStore) http.HandlerFunc {
 		}
 
 		err = json.Unmarshal(buf, &req)
-		logger.Log.Infow("Test", "error", err, "body", string(buf))
+		logger.Log.Infow("Лог UpdateJSON", "error", err, "body", string(buf))
 		if err != nil {
 			log.Printf("Failed to UpdateJson: %v", err)
 			http.Error(w, "internal server error", http.StatusInternalServerError)
@@ -221,7 +221,7 @@ func ValueJSON(store *repository.MemStore) http.HandlerFunc {
 			return
 		}
 
-		logger.Log.Infow("Test", "body", string(buf))
+		logger.Log.Infow("Лог ValueJSON", "body", string(buf))
 		err = json.Unmarshal(buf, &req)
 
 		if err != nil {

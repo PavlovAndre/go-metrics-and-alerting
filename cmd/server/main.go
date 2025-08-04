@@ -60,7 +60,7 @@ func main() {
 		log.Fatal(err)
 	}
 	defer db.Close()
-
+	logger.Log.Info(ps)
 	if config.Database != "" {
 		logger.Log.Info("Migrate migrations")
 		// Применим миграции
