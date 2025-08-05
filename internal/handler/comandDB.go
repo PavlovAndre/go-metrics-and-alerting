@@ -93,7 +93,7 @@ func UpdateDB(db *sql.DB) http.HandlerFunc {
 		}
 
 		logger.Log.Debug("metric added successfully", zap.String("name", req.ID))
-		return
+		//return
 		//Выполняем обновление значения gauge
 		/*if req.MType == "gauge" {
 			if req.Value == nil {
@@ -231,7 +231,6 @@ func AllDB(db *sql.DB) http.HandlerFunc {
 		//var gauges map[string]float64
 		//var counters map[string]int64
 		rows, err := db.Query(query)
-
 		if err != nil {
 			logger.Log.Infow("failed to list metrics", zap.Error(err))
 			return
