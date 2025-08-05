@@ -81,9 +81,16 @@ func main() {
 	r.Use(logger.LogRequest, logger.LogResponse, compress.GzipMiddleware)
 	r.Post("/update/{type}/{name}/{value}", handler.UpdatePage(store))
 	r.Get("/value/{type}/{name}", handler.GetCountMetric(store))
-	r.Get("/", handler.AllMetrics(store))
-	r.Post("/update/", handler.UpdateJSON(store))
-	r.Post("/value/", handler.ValueJSON(store))
+	if config.Database != "" {
+		r.Get("/", handler.AllDB(db))
+		r.Post("/update/", handler.UpdateDB(db))
+		r.Post("/value/", handler.ValueDB(db))
+	} else {
+		r.Get("/", handler.AllMetrics(store))
+		r.Post("/update/", handler.UpdateJSON(store))
+		r.Post("/value/", handler.ValueJSON(store))
+	}
+
 	r.Get("/ping", handler.GetPing(db))
 
 	wg := sync.WaitGroup{}

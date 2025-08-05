@@ -31,7 +31,7 @@ func New(store *repository.MemStore, root *chi.Mux) *Handler {
 	return &Handler{memStore: store, router: root}
 }
 
-const templateHTML = `<!DOCTYPE html>
+const TemplateHTML = `<!DOCTYPE html>
 <html>
 <body>
 <h2>gauges</h2>
@@ -132,7 +132,9 @@ func AllMetrics(store *repository.MemStore) http.HandlerFunc {
 	return func(response http.ResponseWriter, r *http.Request) {
 		gauges := store.GetGauges()
 		counters := store.GetCounters()
-		t, err := template.New("templ").Parse(templateHTML)
+		logger.Log.Infow("<UNK> <UNK>", "gauges", gauges)
+		logger.Log.Infow("<UNK> <UNK>", "counters", counters)
+		t, err := template.New("templ").Parse(TemplateHTML)
 		if err != nil {
 			log.Printf("Failed to Allmetrics: %v", err)
 			response.WriteHeader(http.StatusInternalServerError)
