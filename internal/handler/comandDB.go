@@ -196,7 +196,7 @@ func ValueDB(db *sql.DB) http.HandlerFunc {
 
 		}
 		if req.MType == "gauge" {
-			/*value, ok := store.GetGauge(req.ID )
+			/*value, ok := store.GetGauge(req.ID)
 			if !ok {
 				http.NotFound(w, r)
 				logger.Log.Infow("Нет метрики ")
