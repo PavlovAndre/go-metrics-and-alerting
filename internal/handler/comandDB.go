@@ -231,6 +231,10 @@ func AllDB(db *sql.DB) http.HandlerFunc {
 		//var gauges map[string]float64
 		//var counters map[string]int64
 		rows, err := db.Query(query)
+		if rows.Err() != nil {
+			logger.Log.Errorw("<UNK> <UNK>", "query", query)
+			return
+		}
 		if err != nil {
 			if errors.Is(err, pgx.ErrNoRows) {
 				logger.Log.Debug("metric not found")
