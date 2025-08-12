@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"context"
 	"database/sql"
 	"encoding/json"
 	"errors"
@@ -248,7 +247,7 @@ func AllDB(db *sql.DB) http.HandlerFunc {
 	}
 }
 
-func UpdatesDB(ctx context.Context, db *sql.DB) http.HandlerFunc {
+func UpdatesDB(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		//Проверяем, что метод POST
