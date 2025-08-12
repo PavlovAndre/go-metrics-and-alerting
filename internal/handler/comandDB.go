@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"database/sql"
 	"encoding/json"
 	"errors"
@@ -93,26 +94,6 @@ func UpdateDB(db *sql.DB) http.HandlerFunc {
 		}
 
 		logger.Log.Debug("metric added successfully", zap.String("name", req.ID))
-		//return
-		//Выполняем обновление значения gauge
-		/*if req.MType == "gauge" {
-			if req.Value == nil {
-				http.Error(w, "Bad value", http.StatusBadRequest)
-				return
-			}
-			store.SetGauge(req.ID, *req.Value)
-			w.WriteHeader(http.StatusOK)
-		}
-
-		//Выполняем инкремент значения counter
-		if req.MType == "counter" {
-			if req.Delta == nil {
-				http.Error(w, "Bad value", http.StatusBadRequest)
-				return
-			}
-			store.AddCounter(req.ID, *req.Delta)
-			w.WriteHeader(http.StatusOK)
-		}*/
 
 	}
 }
@@ -173,20 +154,12 @@ func ValueDB(db *sql.DB) http.HandlerFunc {
 		}
 
 		if req.MType == "counter" {
-			/*value, ok := store.GetCounter(req.ID)
-			if !ok {
-				logger.Log.Infow("Нет метрики")
-				http.NotFound(w, r)
-				return
-			}
 
-			req.Delta = &value*/
 			log.Printf("Failed to UpdateJson: %v", req.Delta)
 			body, err := json.Marshal(req)
 
 			if err != nil {
 				log.Printf("Error marshalling json: %s\n", err)
-				//return
 			}
 
 			w.Header().Set("Content-Type", "application/json")
@@ -196,14 +169,6 @@ func ValueDB(db *sql.DB) http.HandlerFunc {
 
 		}
 		if req.MType == "gauge" {
-			/*value, ok := store.GetGauge(req.ID)
-			if !ok {
-				http.NotFound(w, r)
-				logger.Log.Infow("Нет метрики ")
-				return
-			}
-
-			req.Value = &value*/
 			body, err := json.Marshal(req)
 			if err != nil {
 				log.Printf("Error marshalling json: %s\n", err)
@@ -228,8 +193,7 @@ func AllDB(db *sql.DB) http.HandlerFunc {
 		`
 		gauges := make(map[string]float64)
 		counters := make(map[string]int64)
-		//var gauges map[string]float64
-		//var counters map[string]int64
+
 		rows, err := db.Query(query)
 		if rows.Err() != nil {
 			logger.Log.Errorw("<UNK> <UNK>", "query", query)
@@ -267,7 +231,6 @@ func AllDB(db *sql.DB) http.HandlerFunc {
 				}
 			}
 			logger.Log.Infow("После counter")
-			//metricsDB = append(metricsDB, &metric)
 
 		}
 		logger.Log.Infow("<UNK> <UNK>", "gauges", gauges, "counters", counters)
@@ -280,6 +243,147 @@ func AllDB(db *sql.DB) http.HandlerFunc {
 			log.Printf("Failed to Allmetrics: %v", err)
 			response.WriteHeader(http.StatusInternalServerError)
 			return
+		}
+
+	}
+}
+
+func UpdatesDB(ctx context.Context, db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+
+		//Проверяем, что метод POST
+		if r.Method != http.MethodPost {
+			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+
+		//Читаем тело запроса
+		buf, err := io.ReadAll(r.Body)
+		if err != nil {
+			log.Printf("Failed to UpdateJson: %v", err)
+			http.Error(w, "internal server error", http.StatusInternalServerError)
+			return
+		}
+
+		// Парсим тело в структуру запроса
+		var reqs []models.Metrics
+		err = json.Unmarshal(buf, &reqs)
+		logger.Log.Infow("Лог UpdatesDB", "error", err, "body", string(buf))
+		if err != nil {
+			log.Printf("Failed to UpdateJson: %v", err)
+			http.Error(w, "internal server error", http.StatusInternalServerError)
+			return
+		}
+
+		/*var (
+			gauges   = make(map[string]float64)
+			counters = make(map[string]int64)
+		)*/
+
+		//Начало транзакции
+		tx, err := db.Begin()
+		if err != nil {
+			logger.Log.Infow("Ошибка начала транзакции", "err", err)
+			return
+		}
+
+		for _, req := range reqs {
+			if req.ID == "" {
+				http.Error(w, "internal server error", http.StatusInternalServerError)
+				return
+			}
+			if req.MType == "counter" {
+				//Для типа Counter получаем предыдущее значение для суммирования
+				logger.Log.Infow("До oldmetric", "id", req.ID)
+				var oldMetric *int64
+				var oldName string
+				var newDelta int64
+				query := `
+					SELECT delta, name
+					FROM metrics
+					WHERE name = $1
+					`
+
+				logger.Log.Infow("До проверки", "id", req.ID)
+				err = db.QueryRow(query, req.ID).Scan(
+					&oldMetric, &oldName,
+				)
+				if err != nil {
+					if err == sql.ErrNoRows {
+						logger.Log.Infow("<UNK> <UNK>", "id", req.ID)
+					}
+				}
+				logger.Log.Infow("После запроса")
+				if len(oldName) > 0 {
+					logger.Log.Infow("строка не пустая")
+					newDelta = *req.Delta + *oldMetric
+					req.Delta = &newDelta
+				} /*else {
+					logger.Log.Infow("строка пустая")
+					newDelta = *req.Delta
+				}*/
+				query = `
+					INSERT INTO metrics (name, value, delta, type)
+					VALUES ($1, $2, $3, $4)
+					ON CONFLICT (name) DO UPDATE
+					SET value = EXCLUDED.value, delta = EXCLUDED.delta, type = EXCLUDED.type;
+					`
+
+				_, err = tx.Exec(query, req.ID, req.Value, req.Delta, req.MType)
+				if err != nil {
+					logger.Log.Infow("<UNK> <UNK> <UNK>", "err", err)
+					return
+				}
+			}
+			err = tx.Commit()
+			if err != nil {
+				logger.Log.Infow("<UNK> <UNK> <UNK>", "err", err)
+				return
+			}
+			logger.Log.Infow("Метрики добавлены")
+			/*switch req.MType {
+			case "gauge":
+				if req.Value == nil {
+					http.Error(w, "bad request", http.StatusBadRequest)
+					return
+				}
+				gauges[req.ID] = *req.Value
+			case "counter":
+				//Для типа Counter получаем предыдущее значение для суммирования
+				logger.Log.Infow("До oldmetric", "id", req.ID)
+				var oldMetric *int64
+				var oldName string
+				var newDelta int64
+				query := `
+					SELECT delta, name
+					FROM metrics
+					WHERE name = $1
+					`
+
+				logger.Log.Infow("До проверки", "id", req.ID)
+				err = db.QueryRow(query, req.ID).Scan(
+					&oldMetric, &oldName,
+				)
+				if err != nil {
+					if err == sql.ErrNoRows {
+						logger.Log.Infow("<UNK> <UNK>", "id", req.ID)
+					}
+				}
+				logger.Log.Infow("После запроса")
+				if len(oldName) > 0 {
+					logger.Log.Infow("строка не пустая")
+					newDelta = *req.Delta + *oldMetric
+					req.Delta = &newDelta
+				} else {
+					logger.Log.Infow("строка пустая")
+					newDelta = *req.Delta
+				}
+				counters[req.ID] = newDelta
+			default:
+				logger.Log.Infow("Не правильный тип метрики", "id", req.ID)
+				http.Error(w, "bad request", http.StatusBadRequest)
+				return
+			}*/
 		}
 
 	}

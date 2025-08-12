@@ -85,6 +85,7 @@ func main() {
 		r.Get("/", handler.AllDB(db))
 		r.Post("/update/", handler.UpdateDB(db))
 		r.Post("/value/", handler.ValueDB(db))
+		r.Post("/updates/", handler.UpdatesDB(db))
 	} else {
 		r.Get("/", handler.AllMetrics(store))
 		r.Post("/update/", handler.UpdateJSON(store))
