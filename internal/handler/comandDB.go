@@ -251,7 +251,7 @@ func AllDB(db *sql.DB) http.HandlerFunc {
 			response.WriteHeader(http.StatusInternalServerError)
 			return
 		}
-
+		response.Header().Set("Content-Type", "application/json")
 	}
 }
 
