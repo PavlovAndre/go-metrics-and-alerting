@@ -41,7 +41,7 @@ Content-Type: application/json
 
 
 {
-  "id": "PollCount4",
+  "id": "PollCount",
   "type": "counter"
 }
 
