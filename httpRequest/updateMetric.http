@@ -29,7 +29,7 @@ Content-Type: application/json
 
 
 {
-  "id": "PollCount4",
+  "id": "PollCount10",
   "type": "counter",
   "delta": 45
 
@@ -98,18 +98,19 @@ Content-Type: application/json
 
 [
 {
-  "id": "test1",
+  "id": "PollCount3",
   "type": "counter",
   "delta": 45
 
 },
 {
-  "id": "test2",
-  "type": "gauge",
-  "value": 55
+  "id": "PollCount3",
+  "type": "counter",
+  "delta": 55
 
 }
 ]
+
 ###Post Json updates
 POST /value/ HTTP/1.1
 Host: localhost:8080

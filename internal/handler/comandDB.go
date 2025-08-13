@@ -310,7 +310,7 @@ func UpdatesDB(db *sql.DB) http.HandlerFunc {
 			}
 			if req.MType == "counter" {
 				//Для типа Counter получаем предыдущее значение для суммирования
-				logger.Log.Infow("До oldmetric", "id", req.ID)
+				logger.Log.Infow("Counter До oldmetric", "id", req.ID)
 				var oldMetric *int64
 				var oldName string
 				var newDelta int64
@@ -334,10 +334,10 @@ func UpdatesDB(db *sql.DB) http.HandlerFunc {
 					logger.Log.Infow("строка не пустая")
 					newDelta = *req.Delta + *oldMetric
 					req.Delta = &newDelta
-				} /*else {
+				} else {
 					logger.Log.Infow("строка пустая")
-					newDelta = *req.Delta
-				}*/
+					//newDelta = *req.Delta
+				}
 
 			}
 
