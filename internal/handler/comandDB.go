@@ -91,7 +91,8 @@ func UpdateDB(db *sql.DB) http.HandlerFunc {
 			logger.Log.Error("failed to add metric", zap.Error(err))
 			return
 		}
-
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
 		logger.Log.Debug("metric added successfully", zap.String("name", req.ID))
 
 	}
@@ -340,6 +341,8 @@ func UpdatesDB(db *sql.DB) http.HandlerFunc {
 				return
 			}
 			logger.Log.Infow("Метрики добавлены")
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusOK)
 			/*switch req.MType {
 			case "gauge":
 				if req.Value == nil {
