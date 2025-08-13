@@ -87,10 +87,10 @@ User-Agent: go-resty/2.7.0
 
 ###Get Ping2
 POST /value/ HTTP/1.1
-        Host: localhost:8080
-        Accept: application/json
-        Content-Type: application/json
-        User-Agent: go-resty/2.7.0 (https://github.com/go-resty/resty)
+Host: localhost:8080
+Accept: application/json
+Content-Type: application/json
+User-Agent: go-resty/2.7.0 (https://github.com/go-resty/resty)
 
 ###Post Json updates
 POST http://localhost:8080/updates/
