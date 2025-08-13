@@ -41,7 +41,7 @@ Content-Type: application/json
 
 
 {
-  "id": "PollCount",
+  "id": "PollCount4",
   "type": "counter"
 }
 
@@ -110,3 +110,9 @@ Content-Type: application/json
 
 }
 ]
+###Post Json updates
+POST /value/ HTTP/1.1
+Host: localhost:8080
+Accept: application/json
+Content-Type: application/json
+User-Agent: go-resty/2.7.0 (https://github.com/go-resty/resty)
