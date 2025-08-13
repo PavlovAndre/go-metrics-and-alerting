@@ -107,8 +107,9 @@ func UpdateDB(db *sql.DB) http.HandlerFunc {
 
 func ValueDB(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		//Проверяем, что метод POST
+		w.Header().Set("Content-Type", "application/json")
 
+		//Проверяем, что метод POST
 		if r.Method != http.MethodPost {
 			HTTPError(w, "method not allowed", http.StatusMethodNotAllowed)
 			return

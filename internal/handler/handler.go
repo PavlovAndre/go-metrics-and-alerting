@@ -214,6 +214,7 @@ func UpdateJSON(store *repository.MemStore) http.HandlerFunc {
 
 func ValueJSON(store *repository.MemStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
 		//Проверяем, что метод POST
 
 		if r.Method != http.MethodPost {
