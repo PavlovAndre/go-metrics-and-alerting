@@ -91,3 +91,22 @@ Host: localhost:8080
 Accept: application/json
 Content-Type: application/json
 User-Agent: go-resty/2.7.0
+
+###Post Json updates
+POST http://localhost:8080/updates/
+Content-Type: application/json
+
+[
+{
+  "id": "PollCountnew",
+  "type": "counter",
+  "delta": 45
+
+},
+{
+  "id": "PollCountnew2",
+  "type": "counter",
+  "delta": 55
+
+}
+]

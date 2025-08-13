@@ -14,6 +14,13 @@ import (
 	"net/http"
 )
 
+const queryUpdate = `
+					INSERT INTO metrics (name, value, delta, type)
+					VALUES ($1, $2, $3, $4)
+					ON CONFLICT (name) DO UPDATE
+					SET value = EXCLUDED.value, delta = EXCLUDED.delta, type = EXCLUDED.type;
+					`
+
 func UpdateDB(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		//Проверяем, что метод POST
@@ -94,7 +101,7 @@ func UpdateDB(db *sql.DB) http.HandlerFunc {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		logger.Log.Debug("metric added successfully", zap.String("name", req.ID))
-
+		return
 	}
 }
 
@@ -286,6 +293,7 @@ func UpdatesDB(db *sql.DB) http.HandlerFunc {
 			logger.Log.Infow("Ошибка начала транзакции", "err", err)
 			return
 		}
+		defer tx.Rollback()
 
 		for _, req := range reqs {
 			if req.ID == "" {
@@ -322,71 +330,24 @@ func UpdatesDB(db *sql.DB) http.HandlerFunc {
 					logger.Log.Infow("строка пустая")
 					newDelta = *req.Delta
 				}*/
-				query = `
-					INSERT INTO metrics (name, value, delta, type)
-					VALUES ($1, $2, $3, $4)
-					ON CONFLICT (name) DO UPDATE
-					SET value = EXCLUDED.value, delta = EXCLUDED.delta, type = EXCLUDED.type;
-					`
 
-				_, err = tx.Exec(query, req.ID, req.Value, req.Delta, req.MType)
-				if err != nil {
-					logger.Log.Infow("<UNK> <UNK> <UNK>", "err", err)
-					return
-				}
 			}
-			err = tx.Commit()
+
+			_, err = tx.Exec(queryUpdate, req.ID, req.Value, req.Delta, req.MType)
 			if err != nil {
 				logger.Log.Infow("<UNK> <UNK> <UNK>", "err", err)
 				return
 			}
-			logger.Log.Infow("Метрики добавлены")
-			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(http.StatusOK)
-			/*switch req.MType {
-			case "gauge":
-				if req.Value == nil {
-					http.Error(w, "bad request", http.StatusBadRequest)
-					return
-				}
-				gauges[req.ID] = *req.Value
-			case "counter":
-				//Для типа Counter получаем предыдущее значение для суммирования
-				logger.Log.Infow("До oldmetric", "id", req.ID)
-				var oldMetric *int64
-				var oldName string
-				var newDelta int64
-				query := `
-					SELECT delta, name
-					FROM metrics
-					WHERE name = $1
-					`
 
-				logger.Log.Infow("До проверки", "id", req.ID)
-				err = db.QueryRow(query, req.ID).Scan(
-					&oldMetric, &oldName,
-				)
-				if err != nil {
-					if err == sql.ErrNoRows {
-						logger.Log.Infow("<UNK> <UNK>", "id", req.ID)
-					}
-				}
-				logger.Log.Infow("После запроса")
-				if len(oldName) > 0 {
-					logger.Log.Infow("строка не пустая")
-					newDelta = *req.Delta + *oldMetric
-					req.Delta = &newDelta
-				} else {
-					logger.Log.Infow("строка пустая")
-					newDelta = *req.Delta
-				}
-				counters[req.ID] = newDelta
-			default:
-				logger.Log.Infow("Не правильный тип метрики", "id", req.ID)
-				http.Error(w, "bad request", http.StatusBadRequest)
-				return
-			}*/
 		}
-
+		err = tx.Commit()
+		if err != nil {
+			logger.Log.Infow("<UNK> <UNK> <UNK>", "err", err)
+			return
+		}
+		logger.Log.Infow("Метрики добавлены")
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		return
 	}
 }
