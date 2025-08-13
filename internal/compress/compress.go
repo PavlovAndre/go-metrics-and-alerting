@@ -108,7 +108,7 @@ func GzipMiddleware(h http.Handler) http.Handler {
 			contentType := cw.Header().Get("Content-Type")
 			logger.Log.Infof("проверка кодирования5 %s", string(contentType))
 			cw.Header().Set("Content-Encoding", "gzip")
-			cw.Header().Set("Content-Type", "text/html")
+			//cw.Header().Set("Content-Type", "text/html")
 			// меняем оригинальный http.ResponseWriter на новый
 			ow = cw
 			// не забываем отправить клиенту все сжатые данные после завершения middleware

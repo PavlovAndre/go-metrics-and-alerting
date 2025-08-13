@@ -26,14 +26,14 @@ func UpdateDB(db *sql.DB) http.HandlerFunc {
 		//Проверяем, что метод POST
 
 		if r.Method != http.MethodPost {
-			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+			HttpError(w, "method not allowed", http.StatusMethodNotAllowed)
 			return
 		}
 		var req models.Metrics
 		buf, err := io.ReadAll(r.Body)
 		if err != nil {
 			log.Printf("Failed to UpdateJson: %v", err)
-			http.Error(w, "internal server error", http.StatusInternalServerError)
+			HttpError(w, "internal server error", http.StatusInternalServerError)
 			return
 		}
 
@@ -41,13 +41,13 @@ func UpdateDB(db *sql.DB) http.HandlerFunc {
 		logger.Log.Infow("Лог UpdateDB", "error", err, "body", string(buf))
 		if err != nil {
 			log.Printf("Failed to UpdateJson: %v", err)
-			http.Error(w, "internal server error", http.StatusInternalServerError)
+			HttpError(w, "internal server error", http.StatusInternalServerError)
 			return
 		}
 
 		// Проверям, что введен правильный тип метрик
 		if req.MType != "gauge" && req.MType != "counter" {
-			http.Error(w, "Bad type of metric", http.StatusBadRequest)
+			HttpError(w, "Bad type of metric", http.StatusBadRequest)
 			return
 		}
 
@@ -110,7 +110,7 @@ func ValueDB(db *sql.DB) http.HandlerFunc {
 		//Проверяем, что метод POST
 
 		if r.Method != http.MethodPost {
-			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+			HttpError(w, "method not allowed", http.StatusMethodNotAllowed)
 			return
 		}
 
@@ -118,7 +118,7 @@ func ValueDB(db *sql.DB) http.HandlerFunc {
 		buf, err := io.ReadAll(r.Body)
 		if err != nil {
 			log.Printf("Failed to UpdateJson: %v", err)
-			http.Error(w, "internal server error", http.StatusInternalServerError)
+			HttpError(w, "internal server error", http.StatusInternalServerError)
 			return
 		}
 
@@ -127,12 +127,12 @@ func ValueDB(db *sql.DB) http.HandlerFunc {
 
 		if err != nil {
 			log.Printf("Failed to UpdateJson: %v", err)
-			http.Error(w, "internal server error", http.StatusInternalServerError)
+			HttpError(w, "internal server error", http.StatusInternalServerError)
 			return
 		}
 		// Проверям, что введен правильный тип метрик
 		if req.MType != "gauge" && req.MType != "counter" {
-			http.Error(w, "Bad type of metric", http.StatusBadRequest)
+			HttpError(w, "Bad type of metric", http.StatusBadRequest)
 			return
 		}
 
@@ -260,7 +260,7 @@ func UpdatesDB(db *sql.DB) http.HandlerFunc {
 
 		//Проверяем, что метод POST
 		if r.Method != http.MethodPost {
-			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+			HttpError(w, "method not allowed", http.StatusMethodNotAllowed)
 			return
 		}
 
@@ -268,7 +268,7 @@ func UpdatesDB(db *sql.DB) http.HandlerFunc {
 		buf, err := io.ReadAll(r.Body)
 		if err != nil {
 			log.Printf("Failed to UpdateJson: %v", err)
-			http.Error(w, "internal server error", http.StatusInternalServerError)
+			HttpError(w, "internal server error", http.StatusInternalServerError)
 			return
 		}
 
@@ -278,7 +278,7 @@ func UpdatesDB(db *sql.DB) http.HandlerFunc {
 		logger.Log.Infow("Лог UpdatesDB", "error", err, "body", string(buf))
 		if err != nil {
 			log.Printf("Failed to UpdateJson: %v", err)
-			http.Error(w, "internal server error", http.StatusInternalServerError)
+			HttpError(w, "internal server error", http.StatusInternalServerError)
 			return
 		}
 
@@ -297,7 +297,7 @@ func UpdatesDB(db *sql.DB) http.HandlerFunc {
 
 		for _, req := range reqs {
 			if req.ID == "" {
-				http.Error(w, "internal server error", http.StatusInternalServerError)
+				HttpError(w, "internal server error", http.StatusInternalServerError)
 				return
 			}
 			if req.MType == "counter" {
