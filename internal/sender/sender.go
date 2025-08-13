@@ -133,7 +133,7 @@ func (s *Sender) SendMetricsJSON() {
 					continue
 				}
 				req.Body.Close()
-				req.Header.Set("Content-Type", "application/json")
+				//req.Header.Set("Content-Type", "application/json")
 				req.Header.Set("Content-Encoding", "gzip")
 				req.Header.Set("Accept-Encoding", "gzip")
 				resp, err := client.Do(req)
