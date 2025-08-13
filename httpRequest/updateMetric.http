@@ -98,15 +98,15 @@ Content-Type: application/json
 
 [
 {
-  "id": "PollCountnew",
+  "id": "test1",
   "type": "counter",
   "delta": 45
 
 },
 {
-  "id": "PollCountnew2",
-  "type": "counter",
-  "delta": 55
+  "id": "test2",
+  "type": "gauge",
+  "value": 55
 
 }
 ]
