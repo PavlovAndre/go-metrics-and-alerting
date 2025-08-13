@@ -86,7 +86,7 @@ func main() {
 	if config.Database != "" {
 		r.Get("/", handler.AllDB(db))
 		r.Group(func(r chi.Router) {
-			r.Use(handler.SetContentType)
+			//r.Use(handler.SetContentType)
 			r.Post("/update/", handler.UpdateDB(db))
 			r.Post("/value/", handler.ValueDB(db))
 			r.Post("/updates/", handler.UpdatesDB(db))
@@ -95,7 +95,7 @@ func main() {
 	} else {
 		r.Get("/", handler.AllMetrics(store))
 		r.Group(func(r chi.Router) {
-			r.Use(handler.SetContentType)
+			//r.Use(handler.SetContentType)
 			r.Post("/update/", handler.UpdateJSON(store))
 			r.Post("/value/", handler.ValueJSON(store))
 		})
