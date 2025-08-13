@@ -101,7 +101,7 @@ func UpdateDB(db *sql.DB) http.HandlerFunc {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		logger.Log.Debug("metric added successfully", zap.String("name", req.ID))
-		return
+		//return
 	}
 }
 
@@ -348,6 +348,6 @@ func UpdatesDB(db *sql.DB) http.HandlerFunc {
 		logger.Log.Infow("Метрики добавлены")
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		return
+		//return
 	}
 }
