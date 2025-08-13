@@ -139,7 +139,8 @@ func ValueDB(db *sql.DB) http.HandlerFunc {
 
 		//Проверка, что имя метрики не пустое
 		if req.ID == "" {
-			http.NotFound(w, r)
+			//http.NotFound(w, r)
+			HTTPError(w, "{}", http.StatusNotFound)
 			return
 		}
 
@@ -155,9 +156,11 @@ func ValueDB(db *sql.DB) http.HandlerFunc {
 		if err != nil {
 			if errors.Is(err, pgx.ErrNoRows) {
 				logger.Log.Debug("metric not found", zap.String("name", req.ID))
+				HTTPError(w, "{}", http.StatusNotFound)
 				return
 			}
 			logger.Log.Error("failed to get metric", zap.Error(err))
+			HTTPError(w, "{}", http.StatusInternalServerError)
 			return
 		}
 
@@ -168,6 +171,8 @@ func ValueDB(db *sql.DB) http.HandlerFunc {
 
 			if err != nil {
 				log.Printf("Error marshalling json: %s\n", err)
+				HTTPError(w, "{}", http.StatusInternalServerError)
+				return
 			}
 
 			w.Header().Set("Content-Type", "application/json")
@@ -180,6 +185,8 @@ func ValueDB(db *sql.DB) http.HandlerFunc {
 			body, err := json.Marshal(req)
 			if err != nil {
 				log.Printf("Error marshalling json: %s\n", err)
+				HTTPError(w, "{}", http.StatusInternalServerError)
+				return
 			}
 
 			w.Header().Set("Content-Type", "application/json")
