@@ -135,6 +135,7 @@ func GetCountMetric(store *repository.MemStore) http.HandlerFunc {
 
 func AllMetrics(store *repository.MemStore) http.HandlerFunc {
 	return func(response http.ResponseWriter, r *http.Request) {
+		response.Header().Set("Content-Type", "text/html; charset=utf-8")
 		gauges := store.GetGauges()
 		counters := store.GetCounters()
 		logger.Log.Infow("<UNK> <UNK>", "gauges", gauges)
