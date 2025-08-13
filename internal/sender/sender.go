@@ -90,7 +90,7 @@ func (s *Sender) SendMetricsJSON() {
 					log.Printf("ошибка создания запроса")
 					continue
 				}
-				req.Header.Set("Content-Type", "application/json")
+				//req.Header.Set("Content-Type", "application/json")
 				req.Header.Set("Content-Encoding", "gzip")
 				req.Header.Set("Accept-Encoding", "gzip")
 				resp, err := client.Do(req)
