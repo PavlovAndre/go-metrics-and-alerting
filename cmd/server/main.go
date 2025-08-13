@@ -79,25 +79,25 @@ func main() {
 	r := chi.NewRouter()
 
 	r.Use(logger.LogRequest, logger.LogResponse, compress.GzipMiddleware)
-	r.Group(func(r chi.Router) {
-		r.Post("/update/{type}/{name}/{value}", handler.UpdatePage(store))
-		r.Get("/value/{type}/{name}", handler.GetCountMetric(store))
+	r.Group(func(r1 chi.Router) {
+		r1.Post("/update/{type}/{name}/{value}", handler.UpdatePage(store))
+		r1.Get("/value/{type}/{name}", handler.GetCountMetric(store))
 	})
 	if config.Database != "" {
 		r.Get("/", handler.AllDB(db))
-		r.Group(func(r chi.Router) {
-			//r.Use(handler.SetContentType)
-			r.Post("/update/", handler.UpdateDB(db))
-			r.Post("/value/", handler.ValueDB(db))
-			r.Post("/updates/", handler.UpdatesDB(db))
+		r.Group(func(r2 chi.Router) {
+			r2.Use(handler.SetContentType)
+			r2.Post("/update/", handler.UpdateDB(db))
+			r2.Post("/value/", handler.ValueDB(db))
+			r2.Post("/updates/", handler.UpdatesDB(db))
 		})
 
 	} else {
 		r.Get("/", handler.AllMetrics(store))
-		r.Group(func(r chi.Router) {
-			//r.Use(handler.SetContentType)
-			r.Post("/update/", handler.UpdateJSON(store))
-			r.Post("/value/", handler.ValueJSON(store))
+		r.Group(func(r2 chi.Router) {
+			r2.Use(handler.SetContentType)
+			r2.Post("/update/", handler.UpdateJSON(store))
+			r2.Post("/value/", handler.ValueJSON(store))
 		})
 	}
 	r.Get("/ping", handler.GetPing(db))
