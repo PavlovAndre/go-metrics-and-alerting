@@ -290,11 +290,11 @@ func UpdatesDB(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
-		/*var (
-			gauges   = make(map[string]float64)
+		var (
+			//gauges   = make(map[string]float64)
 			counters = make(map[string]int64)
-		)*/
-
+		)
+		logger.Log.Infow("Значение мапы counters", "counters", counters)
 		//Начало транзакции
 		tx, err := db.Begin()
 		if err != nil {
@@ -330,18 +330,41 @@ func UpdatesDB(db *sql.DB) http.HandlerFunc {
 					}
 				}
 				logger.Log.Infow("После запроса")
-				if len(oldName) > 0 {
-					logger.Log.Infow("строка не пустая")
-					newDelta = *req.Delta + *oldMetric
-					req.Delta = &newDelta
-				} else {
-					logger.Log.Infow("строка пустая")
-					//newDelta = *req.Delta
-				}
+				/*if len(oldName) > 0 {
 
+					newDelta = *req.Delta + *oldMetric
+					logger.Log.Infow("строка не пустая", "newDelta", newDelta, "oldMetric", oldMetric)
+					//req.Delta = &newDelta
+				} else {
+					newDelta = *req.Delta
+					logger.Log.Infow("строка пустая", "newDelta", newDelta)
+				}*/
+				if _, exists := counters[req.ID]; exists {
+					logger.Log.Infow("Метрика есть", "newDelta = ", newDelta)
+					//newDelta = newDelta + counters[req.ID]
+					newDelta = counters[req.ID] + *req.Delta
+					logger.Log.Infow("Добавили к существующей", "добавили", newDelta, "counters", counters[req.ID])
+
+				} else {
+					if len(oldName) > 0 {
+						newDelta = *req.Delta + *oldMetric
+						logger.Log.Infow("строка не пустая", "newDelta", newDelta, "oldMetric", oldMetric)
+						//req.Delta = &newDelta
+					} else {
+						newDelta = *req.Delta
+						logger.Log.Infow("строка пустая", "newDelta", newDelta)
+					}
+					logger.Log.Infow("Метрика отсутствует")
+					//newDelta = *req.Delta
+					logger.Log.Infow("Новая NewDelta", "добавили", newDelta, "id", req.ID)
+				}
+				req.Delta = &newDelta
+				counters[req.ID] = newDelta
+				logger.Log.Infow("Значение мапы2 counters", "counters", counters)
 			}
 
-			_, err = tx.Exec(queryUpdate, req.ID, req.Value, req.Delta, req.MType)
+			arts, err := tx.Exec(queryUpdate, req.ID, req.Value, req.Delta, req.MType)
+			logger.Log.Infow("tx.Exec", "tx.Exec", arts)
 			if err != nil {
 				logger.Log.Infow("<UNK> <UNK> <UNK>", "err", err)
 				return

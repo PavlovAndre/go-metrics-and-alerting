@@ -98,22 +98,29 @@ Content-Type: application/json
 
 [
 {
-  "id": "PollCount3",
+  "id": "PollCount6",
   "type": "counter",
-  "delta": 45
+  "delta": 5
 
 },
 {
-  "id": "PollCount3",
+  "id": "PollCount6",
   "type": "counter",
-  "delta": 55
+  "delta": 6
 
-}
+},
+  {
+    "id": "PollCount7",
+    "type": "counter",
+    "delta": 7
+
+  }
 ]
 
 ###Post Json updates
 POST /value/ HTTP/1.1
 Host: localhost:8080
 Accept: application/json
+Accept-Encoding: gzip
 Content-Type: application/json
 User-Agent: go-resty/2.7.0 (https://github.com/go-resty/resty)
