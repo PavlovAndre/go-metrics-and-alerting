@@ -160,7 +160,7 @@ func UpdateJSON(store *repository.MemStore) http.HandlerFunc {
 			HTTPError(w, "method not allowed", http.StatusMethodNotAllowed)
 			return
 		}
-		w.Header().Set("Content-Type", "application/json")
+		//w.Header().Set("Content-Type", "application/json")
 		var req models.Metrics
 		buf, err := io.ReadAll(r.Body)
 		if err != nil {
