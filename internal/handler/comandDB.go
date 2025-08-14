@@ -160,7 +160,7 @@ func ValueDB(db *sql.DB) http.HandlerFunc {
 				return
 			}
 			logger.Log.Error("failed to get metric", zap.Error(err))
-			HTTPError(w, "{}", http.StatusInternalServerError)
+			HTTPError(w, "{}", http.StatusNotFound)
 			return
 		}
 
