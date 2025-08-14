@@ -156,11 +156,11 @@ func AllMetrics(store *repository.MemStore) http.HandlerFunc {
 func UpdateJSON(store *repository.MemStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		//Проверяем, что метод POST
-
 		if r.Method != http.MethodPost {
 			HTTPError(w, "method not allowed", http.StatusMethodNotAllowed)
 			return
 		}
+		w.Header().Set("Content-Type", "application/json")
 		var req models.Metrics
 		buf, err := io.ReadAll(r.Body)
 		if err != nil {
