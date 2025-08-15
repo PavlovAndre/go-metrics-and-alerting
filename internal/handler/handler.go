@@ -209,6 +209,7 @@ func UpdateJSON(store *repository.MemStore) http.HandlerFunc {
 				return
 			}
 			store.AddCounter(req.ID, *req.Delta)
+			w.Write([]byte("{}"))
 			w.WriteHeader(http.StatusOK)
 		}
 
