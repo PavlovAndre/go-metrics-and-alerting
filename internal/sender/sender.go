@@ -164,7 +164,7 @@ func (s *Sender) SendMetricsBatchJSON() {
 				}
 				metrics = append(metrics, send)
 			}
-			//log.Printf("Gauges %v", metrics)
+			log.Printf("Gauges %v", metrics)
 			for key, value := range s.memStore.GetCounters() {
 				send := models.Metrics{
 					ID:    key,
