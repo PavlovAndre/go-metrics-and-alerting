@@ -164,7 +164,7 @@ func (s *Sender) SendMetricsBatchJSON() {
 				}
 				metrics = append(metrics, send)
 			}
-			log.Printf("Gauges %v", metrics)
+			//log.Printf("Gauges %v", metrics)
 			for key, value := range s.memStore.GetCounters() {
 				send := models.Metrics{
 					ID:    key,
@@ -173,13 +173,13 @@ func (s *Sender) SendMetricsBatchJSON() {
 				}
 				metrics = append(metrics, send)
 			}
-			log.Printf("Counters %v", metrics)
+			//log.Printf("Counters %v", metrics)
 			body, err := json.Marshal(metrics)
 			if err != nil {
 				log.Printf("Error marshalling json: %s\n", err)
 				continue
 			}
-			log.Printf("Body %v", body)
+			//log.Printf("Body %v", body)
 			compressBody, err := compress.GZIPCompress(body)
 			if err != nil {
 				log.Printf("Error compressing json: %s\n", err)
