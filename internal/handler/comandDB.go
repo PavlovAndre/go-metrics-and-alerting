@@ -354,11 +354,11 @@ func UpdatesDB(db *sql.DB) http.HandlerFunc {
 				}
 				req.Delta = &newDelta
 				counters[req.ID] = newDelta
-				logger.Log.Infow("Значение мапы2 counters", "counters", counters)
+				//logger.Log.Infow("Значение мапы2 counters", "counters", counters)
 			}
 
-			arts, err := tx.Exec(queryUpdate, req.ID, req.Value, req.Delta, req.MType)
-			logger.Log.Infow("tx.Exec", "tx.Exec", arts)
+			_, err := tx.Exec(queryUpdate, req.ID, req.Value, req.Delta, req.MType)
+			//logger.Log.Infow("tx.Exec", "tx.Exec", arts)
 			if err != nil {
 				logger.Log.Infow("<UNK> <UNK> <UNK>", "err", err)
 				return
