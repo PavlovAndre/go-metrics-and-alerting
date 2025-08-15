@@ -23,6 +23,7 @@ const queryUpdate = `
 
 func UpdateDB(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		logger.Log.Infow("Запущена функция UpdateDB")
 		//Проверяем, что метод POST
 
 		if r.Method != http.MethodPost {
@@ -107,6 +108,7 @@ func UpdateDB(db *sql.DB) http.HandlerFunc {
 
 func ValueDB(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		logger.Log.Infow("Запущена функция ValueDB")
 		w.Header().Set("Content-Type", "application/json")
 
 		//Проверяем, что метод POST
@@ -265,7 +267,7 @@ func AllDB(db *sql.DB) http.HandlerFunc {
 
 func UpdatesDB(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-
+		logger.Log.Infow("Запущена функция UpdatesDB")
 		//Проверяем, что метод POST
 		if r.Method != http.MethodPost {
 			HTTPError(w, "method not allowed", http.StatusMethodNotAllowed)

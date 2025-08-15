@@ -157,6 +157,7 @@ func AllMetrics(store *repository.MemStore) http.HandlerFunc {
 // UpdateJSON обрабатывает изменения одиночных запросов
 func UpdateJSON(store *repository.MemStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		logger.Log.Infow("Запущена функция UpdateJSON")
 		//Проверяем, что метод POST
 		if r.Method != http.MethodPost {
 			HTTPError(w, "method not allowed", http.StatusMethodNotAllowed)
@@ -217,7 +218,7 @@ func UpdateJSON(store *repository.MemStore) http.HandlerFunc {
 // UpdatesJSON обрабатывает множественный запрос
 func UpdatesJSON(store *repository.MemStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-
+		logger.Log.Infow("Запущена функция UpdatesJSON")
 		//Проверяем, что метод POST
 		if r.Method != http.MethodPost {
 			HTTPError(w, "method not allowed", http.StatusMethodNotAllowed)
@@ -292,6 +293,7 @@ func UpdatesJSON(store *repository.MemStore) http.HandlerFunc {
 
 func ValueJSON(store *repository.MemStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		logger.Log.Infow("Запущена функция ValueJSON")
 		w.Header().Set("Content-Type", "application/json")
 		//Проверяем, что метод POST
 
