@@ -63,6 +63,10 @@ func UpdateDB(db *sql.DB) http.HandlerFunc {
 		var oldMetric *int64
 		var oldName string
 		if req.MType == "counter" {
+			if req.Delta == nil {
+				HTTPError(w, "Bad value", http.StatusBadRequest)
+				return
+			}
 			query := `
 					SELECT delta, name
 					FROM metrics
@@ -85,6 +89,12 @@ func UpdateDB(db *sql.DB) http.HandlerFunc {
 				req.Delta = &newDelta
 			} else {
 				logger.Log.Infow("строка пустая")
+			}
+		}
+		if req.MType == "gauge" {
+			if req.Value == nil {
+				HTTPError(w, "Bad value", http.StatusBadRequest)
+				return
 			}
 		}
 		// Запись в базу новых метрик
