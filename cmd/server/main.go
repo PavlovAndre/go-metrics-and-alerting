@@ -98,6 +98,7 @@ func main() {
 			//r2.Use(handler.SetContentType)
 			r2.Post("/update/", handler.UpdateJSON(store))
 			r2.Post("/value/", handler.ValueJSON(store))
+			r2.Post("/updates/", handler.UpdatesJSON(store))
 		})
 	}
 	r.Get("/ping", handler.GetPing(db))

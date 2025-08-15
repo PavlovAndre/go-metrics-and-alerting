@@ -2,6 +2,7 @@ package collector
 
 import (
 	"github.com/PavlovAndre/go-metrics-and-alerting.git/internal/repository"
+	"log"
 	"math/rand"
 	"runtime"
 	"time"
@@ -21,6 +22,7 @@ func (c *Collector) CollectMetrics() {
 	for {
 		ticker := time.NewTicker(time.Duration(c.pollInterval) * time.Second)
 		for range ticker.C {
+			log.Printf("Start func CollectMetrics")
 			m := runtime.MemStats{}
 			runtime.ReadMemStats(&m)
 			c.memStore.SetGauge("Alloc", float64(m.Alloc))

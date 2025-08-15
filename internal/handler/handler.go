@@ -153,6 +153,8 @@ func AllMetrics(store *repository.MemStore) http.HandlerFunc {
 
 	}
 }
+
+// UpdateJSON обрабатывает изменения одиночных запросов
 func UpdateJSON(store *repository.MemStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		//Проверяем, что метод POST
@@ -206,6 +208,82 @@ func UpdateJSON(store *repository.MemStore) http.HandlerFunc {
 				return
 			}
 			store.AddCounter(req.ID, *req.Delta)
+			w.WriteHeader(http.StatusOK)
+		}
+
+	}
+}
+
+// UpdatesJSON обрабатывает множественный запрос
+func UpdatesJSON(store *repository.MemStore) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+
+		//Проверяем, что метод POST
+		if r.Method != http.MethodPost {
+			HTTPError(w, "method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+
+		//Читаем тело запроса
+
+		buf, err := io.ReadAll(r.Body)
+		if err != nil {
+			log.Printf("Failed to UpdateJson: %v", err)
+			HTTPError(w, "internal server error", http.StatusInternalServerError)
+			return
+		}
+		// Парсим тело в структуру запроса
+		var reqs []models.Metrics
+		err = json.Unmarshal(buf, &reqs)
+		logger.Log.Infow("Лог UpdatesJSON", "error", err, "body", string(buf))
+		if err != nil {
+			log.Printf("Failed to UpdateJson: %v", err)
+			HTTPError(w, "internal server error", http.StatusInternalServerError)
+			return
+		}
+
+		var (
+		//gauges   = make(map[string]float64)
+		//counters = make(map[string]int64)
+		)
+		//logger.Log.Infow("Значение мапы counters", "counters", counters)
+
+		for _, req := range reqs {
+			if req.ID == "" {
+				HTTPError(w, "internal server error", http.StatusInternalServerError)
+				return
+			}
+			// Проверям, что введен правильный тип метрик
+			if req.MType != "gauge" && req.MType != "counter" {
+				HTTPError(w, "Bad type of metric", http.StatusBadRequest)
+				return
+			}
+
+			//Проверка, что имя метрики не пустое
+			if req.ID == "" {
+				http.NotFound(w, r)
+				return
+			}
+
+			//Выполняем обновление значения gauge
+			if req.MType == "gauge" {
+				if req.Value == nil {
+					HTTPError(w, "Bad value", http.StatusBadRequest)
+					return
+				}
+				store.SetGauge(req.ID, *req.Value)
+				w.WriteHeader(http.StatusOK)
+			}
+
+			//Выполняем инкремент значения counter
+			if req.MType == "counter" {
+				if req.Delta == nil {
+					HTTPError(w, "Bad value", http.StatusBadRequest)
+					return
+				}
+				store.AddCounter(req.ID, *req.Delta)
+
+			}
 			w.WriteHeader(http.StatusOK)
 		}
 

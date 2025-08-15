@@ -330,15 +330,7 @@ func UpdatesDB(db *sql.DB) http.HandlerFunc {
 					}
 				}
 				logger.Log.Infow("После запроса")
-				/*if len(oldName) > 0 {
 
-					newDelta = *req.Delta + *oldMetric
-					logger.Log.Infow("строка не пустая", "newDelta", newDelta, "oldMetric", oldMetric)
-					//req.Delta = &newDelta
-				} else {
-					newDelta = *req.Delta
-					logger.Log.Infow("строка пустая", "newDelta", newDelta)
-				}*/
 				if _, exists := counters[req.ID]; exists {
 					logger.Log.Infow("Метрика есть", "newDelta = ", newDelta)
 					//newDelta = newDelta + counters[req.ID]
