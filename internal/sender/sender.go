@@ -2,9 +2,13 @@ package sender
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/PavlovAndre/go-metrics-and-alerting.git/internal/compress"
+	"github.com/PavlovAndre/go-metrics-and-alerting.git/internal/logger"
+	"github.com/PavlovAndre/go-metrics-and-alerting.git/internal/metricsError"
 	models "github.com/PavlovAndre/go-metrics-and-alerting.git/internal/model"
 	"github.com/PavlovAndre/go-metrics-and-alerting.git/internal/repository"
 	"log"
@@ -212,4 +216,103 @@ func (s *Sender) SendMetricsBatchJSON() {
 			s.memStore.SetCounter("PollCount", 0)
 		}
 	}
+}
+
+// SendMetricsBatchJSONPeriod Функция отправки  метрик по JSON одним батчем
+func (s *Sender) SendMetricsBatchJSONPeriod(ctx context.Context) {
+	logger.Log.Info("Starting periodic sender")
+	ticker := time.NewTicker(time.Duration(s.reportInterval) * time.Second)
+	s.retrySend()
+	for {
+		// Ловим закрытие контекста, чтобы завершить обработку
+		select {
+		case <-ticker.C:
+			s.retrySend()
+		case <-ctx.Done():
+			logger.Log.Info("Periodic sender stopped")
+			ticker.Stop()
+			return
+		}
+	}
+
+}
+
+// retrySend отправка метрик с повторами
+func (s *Sender) retrySend() {
+	pause := time.Second
+	var rErr *metricsError.Retriable
+	for i := 0; i < 3; i++ {
+		err := s.SendMetrics2()
+		if err == nil {
+			break
+		}
+		logger.Log.Error(err)
+		if !errors.As(err, &rErr) {
+			break
+		}
+
+		<-time.After(pause)
+		pause += 2 * time.Second
+	}
+}
+
+func (s *Sender) SendMetrics2() error {
+	log.Printf("Start func SendMetricsBatchJSONPeriod")
+
+	var metrics []models.Metrics
+	for key, value := range s.memStore.GetGauges() {
+		send := models.Metrics{
+			ID:    key,
+			MType: "gauge",
+			Value: &value,
+		}
+		metrics = append(metrics, send)
+	}
+	//log.Printf("Gauges %v", metrics)
+	for key, value := range s.memStore.GetCounters() {
+		send := models.Metrics{
+			ID:    key,
+			MType: "counter",
+			Delta: &value,
+		}
+		metrics = append(metrics, send)
+	}
+	//log.Printf("Counters %v", metrics)
+	body, err := json.Marshal(metrics)
+	if err != nil {
+		log.Printf("Error marshalling json: %s\n", err)
+		return err
+	}
+	//log.Printf("Body %v", body)
+	compressBody, err := compress.GZIPCompress(body)
+	if err != nil {
+		log.Printf("Error compressing json: %s\n", err)
+	}
+
+	sendURL := fmt.Sprintf("http://%s/updates/", s.addrServer)
+	conn, err := net.DialTimeout("tcp", s.addrServer, 0)
+	if err != nil {
+		log.Printf("Error connecting to %s: %s\n", sendURL, err)
+		return err
+	}
+	conn.Close()
+
+	client := &http.Client{}
+
+	req, err := http.NewRequest("POST", sendURL, bytes.NewReader(compressBody))
+	if err != nil {
+		log.Printf("ошибка создания запроса")
+		return err
+	}
+	//req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Content-Encoding", "gzip")
+	req.Header.Set("Accept-Encoding", "gzip")
+	resp, err := client.Do(req)
+	if err != nil {
+		log.Printf("ошибка отправки запроса")
+		return err
+	}
+	resp.Body.Close()
+	s.memStore.SetCounter("PollCount", 0)
+	return nil
 }
