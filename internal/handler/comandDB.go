@@ -130,7 +130,7 @@ func ValueDB(db *sql.DB) http.HandlerFunc {
 		var req models.Metrics
 		buf, err := io.ReadAll(r.Body)
 		if err != nil {
-			log.Printf("Failed to UpdateJson: %v", err)
+			logger.Log.Infow("Failed read buf.", "ошибка:", err, "buf:", string(buf))
 			HTTPError(w, "internal server error", http.StatusInternalServerError)
 			return
 		}
@@ -139,7 +139,7 @@ func ValueDB(db *sql.DB) http.HandlerFunc {
 		err = json.Unmarshal(buf, &req)
 
 		if err != nil {
-			log.Printf("Failed to UpdateJson: %v", err)
+			logger.Log.Infow("Failed to UpdateJson.", "ошибка:", err)
 			HTTPError(w, "internal server error", http.StatusInternalServerError)
 			return
 		}
