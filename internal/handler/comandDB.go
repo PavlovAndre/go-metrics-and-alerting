@@ -171,13 +171,14 @@ func ValueDB(db *sql.DB) http.HandlerFunc {
 				HTTPError(w, "{}", http.StatusNotFound)
 				return
 			}
-			logger.Log.Error("failed to get metric", zap.Error(err))
+			logger.Log.Infow("failed to get metric", zap.Error(err))
 			HTTPError(w, "{}", http.StatusNotFound)
 			return
 		}
 
+		logger.Log.Infow("До каунтер")
 		if req.MType == "counter" {
-
+			logger.Log.Infow("После каунтер")
 			log.Printf("Failed to UpdateJson: %v", req.Delta)
 			body, err := json.Marshal(req)
 
