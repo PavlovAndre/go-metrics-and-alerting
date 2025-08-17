@@ -1,4 +1,4 @@
-package metricsError
+package metricserror
 
 type Retriable struct {
 	original error

@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"github.com/PavlovAndre/go-metrics-and-alerting.git/internal/compress"
 	"github.com/PavlovAndre/go-metrics-and-alerting.git/internal/logger"
-	"github.com/PavlovAndre/go-metrics-and-alerting.git/internal/metricsError"
+	"github.com/PavlovAndre/go-metrics-and-alerting.git/internal/metricserror"
 	models "github.com/PavlovAndre/go-metrics-and-alerting.git/internal/model"
 	"github.com/PavlovAndre/go-metrics-and-alerting.git/internal/repository"
 	"log"
@@ -240,17 +240,22 @@ func (s *Sender) SendMetricsBatchJSONPeriod(ctx context.Context) {
 // retrySend отправка метрик с повторами
 func (s *Sender) retrySend() {
 	pause := time.Second
-	var rErr *metricsError.Retriable
+	var rErr *metricserror.Retriable
 	for i := 0; i < 3; i++ {
+		log.Printf("Starting retry send %v", i)
 		err := s.SendMetrics2()
+		log.Printf("Starting retry send2 %v", i)
 		if err == nil {
+			log.Printf("Starting retry send3 %v", i)
 			break
 		}
+		log.Printf("Starting retry send4 %v", i)
 		logger.Log.Error(err)
+		log.Printf("Starting retry send5 %v", i)
 		if !errors.As(err, &rErr) {
 			break
 		}
-
+		log.Printf("Starting retry send6 %v", i)
 		<-time.After(pause)
 		pause += 2 * time.Second
 	}
@@ -258,7 +263,8 @@ func (s *Sender) retrySend() {
 
 func (s *Sender) SendMetrics2() error {
 	log.Printf("Start func SendMetricsBatchJSONPeriod")
-
+	s.memStore.Mu.RLock()
+	defer s.memStore.Mu.RUnlock()
 	var metrics []models.Metrics
 	for key, value := range s.memStore.GetGauges() {
 		send := models.Metrics{

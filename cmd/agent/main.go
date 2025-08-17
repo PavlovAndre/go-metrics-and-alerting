@@ -34,7 +34,7 @@ func main() {
 	go func() {
 		logger.Log.Infow("Starting sender")
 		defer wg.Done()
-		send.SendMetricsBatchJSONPeriod(ctx)
+		send.SendMetricsBatchJSON()
 	}()
 	wg.Wait()
 
