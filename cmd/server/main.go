@@ -49,8 +49,14 @@ func main() {
 		"storeInterval", config.StoreInterval,
 		"database", config.Database)
 	store := repository.New()
+	var fileStore *logger.FileStorage
 
-	fileStore := logger.NewFileStorage(store, config.StoreInterval)
+	if config.Database == "" {
+		fileStore = logger.NewFileStorage(store, config.StoreInterval)
+		if config.Restore {
+			fileStore.Read(config.FileStorage)
+		}
+	}
 
 	//Подключение к базе
 	ps := config.Database
@@ -73,9 +79,6 @@ func main() {
 		}
 	}
 
-	if config.Restore {
-		fileStore.Read(config.FileStorage)
-	}
 	r := chi.NewRouter()
 
 	r.Use(logger.LogRequest, logger.LogResponse, compress.GzipMiddleware)
