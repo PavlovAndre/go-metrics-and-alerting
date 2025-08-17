@@ -1,17 +1,21 @@
 package handler
 
 import (
+	"context"
 	"database/sql"
 	"encoding/json"
 	"errors"
 	"github.com/PavlovAndre/go-metrics-and-alerting.git/internal/logger"
 	models "github.com/PavlovAndre/go-metrics-and-alerting.git/internal/model"
+	"github.com/jackc/pgerrcode"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"go.uber.org/zap"
 	"html/template"
 	"io"
 	"log"
 	"net/http"
+	"time"
 )
 
 const queryUpdate = `
@@ -104,7 +108,11 @@ func UpdateDB(db *sql.DB) http.HandlerFunc {
 					ON CONFLICT (name) DO UPDATE
 					SET value = EXCLUDED.value, delta = EXCLUDED.delta, type = EXCLUDED.type;
 					`
-		_, err = db.Exec(query, req.ID, req.Value, req.Delta, req.MType)
+		//timer := time.NewTimer(time.Duration(0) * time.Second)
+		//defer timer.Stop()
+
+		err = requestDB(r.Context(), db, req, query)
+
 		if err != nil {
 			logger.Log.Error("failed to add metric", zap.Error(err))
 			return
@@ -385,4 +393,31 @@ func UpdatesDB(db *sql.DB) http.HandlerFunc {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 	}
+}
+
+func requestDB(ctx context.Context, db *sql.DB, req models.Metrics, query string) (err error) {
+	timer := time.NewTimer(time.Duration(0) * time.Second)
+	defer timer.Stop()
+	var pgErr *pgconn.PgError
+	for i := 1; i <= 5; i += 2 {
+
+		_, err = db.Exec(query, req.ID, req.Value, req.Delta, req.MType)
+		if err == nil {
+			logger.Log.Infow("Подключились к базе без ошибок")
+			return nil
+		}
+
+		if !(errors.As(err, &pgErr) && pgerrcode.IsConnectionException(pgErr.Code)) {
+			return err
+		}
+		timer.Reset(time.Duration(i) * time.Second)
+		select {
+		case <-timer.C:
+			logger.Log.Infow("Ошибка при подключении к базе")
+			//timer.Reset(time.Duration(i) * time.Second)
+		case <-ctx.Done():
+			return err
+		}
+	}
+	return err
 }

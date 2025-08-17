@@ -11,6 +11,7 @@ import (
 	"github.com/PavlovAndre/go-metrics-and-alerting.git/internal/metricserror"
 	models "github.com/PavlovAndre/go-metrics-and-alerting.git/internal/model"
 	"github.com/PavlovAndre/go-metrics-and-alerting.git/internal/repository"
+	"github.com/PavlovAndre/go-metrics-and-alerting.git/internal/retry"
 	"log"
 	"net"
 	"net/http"
@@ -22,6 +23,8 @@ type Sender struct {
 	reportInterval int
 	addrServer     string
 }
+
+var ErrUnableToSendMetrics = errors.New("unable to send metrics")
 
 func New(store *repository.MemStore, sendInt int, addr string) *Sender {
 	return &Sender{memStore: store, reportInterval: sendInt, addrServer: addr}
@@ -237,6 +240,24 @@ func (s *Sender) SendMetricsBatchJSONPeriod(ctx context.Context) {
 
 }
 
+func (s *Sender) SendStoredData() error {
+	//metricsToSend := append(data.Metrics, data.PollCount)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	err := retry.OnErr(ctx, []error{ErrUnableToSendMetrics}, []time.Duration{
+		1 * time.Second, 3 * time.Second, 5 * time.Second},
+		func(args ...any) error {
+			return s.SendMetrics2()
+		},
+	)
+
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 // retrySend отправка метрик с повторами
 func (s *Sender) retrySend() {
 	pause := time.Second
@@ -262,9 +283,11 @@ func (s *Sender) retrySend() {
 }
 
 func (s *Sender) SendMetrics2() error {
-	log.Printf("Start func SendMetricsBatchJSONPeriod")
-	s.memStore.Mu.RLock()
-	defer s.memStore.Mu.RUnlock()
+	log.Printf("Start func SendMetrics2")
+	//s.metricsCollection.Lock()
+	//defer s.metricsCollection.Unlock()
+	log.Printf("прошли mutex")
+
 	var metrics []models.Metrics
 	for key, value := range s.memStore.GetGauges() {
 		send := models.Metrics{
