@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"github.com/PavlovAndre/go-metrics-and-alerting.git/internal/collector"
 	"github.com/PavlovAndre/go-metrics-and-alerting.git/internal/logger"
 	"github.com/PavlovAndre/go-metrics-and-alerting.git/internal/repository"
@@ -17,8 +16,8 @@ func main() {
 		log.Fatal(err)
 	}
 
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+	//ctx, cancel := context.WithCancel(context.Background())
+	//defer cancel()
 
 	wg := sync.WaitGroup{}
 	wg.Add(2)
