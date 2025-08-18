@@ -390,8 +390,8 @@ func UpdatesDB(db *sql.DB) http.HandlerFunc {
 			}
 
 		}
-		//err = tx.Commit()
-		err = requestCommitDB(r.Context(), db, tx)
+		err = tx.Commit()
+		//err = requestCommitDB(r.Context(), db, tx)
 		if err != nil {
 			logger.Log.Infow("<UNK> <UNK> <UNK>", "err", err)
 			return
