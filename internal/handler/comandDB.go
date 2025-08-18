@@ -169,10 +169,10 @@ func ValueDB(db *sql.DB) http.HandlerFunc {
 					FROM metrics
 					WHERE name = $1 AND type = $2
 					`
-
-		err = db.QueryRow(query, req.ID, req.MType).Scan(
+		req, err = requestSelectDB(r.Context(), db, req, query)
+		/*err = db.QueryRow(query, req.ID, req.MType).Scan(
 			&req.ID, &req.Value, &req.Delta, &req.MType,
-		)
+		)*/
 		if err != nil {
 			if errors.Is(err, pgx.ErrNoRows) {
 				logger.Log.Debug("metric not found", zap.String("name", req.ID))
