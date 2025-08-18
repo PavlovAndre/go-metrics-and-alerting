@@ -28,7 +28,7 @@ POST http://localhost:8080/update/
 Content-Type: application/json
 
 {
-  "id": "PollCount10",
+  "id": "PollCount11",
   "type": "counter",
   "delta": 45
 

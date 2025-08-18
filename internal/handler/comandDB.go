@@ -78,14 +78,15 @@ func UpdateDB(db *sql.DB) http.HandlerFunc {
 					`
 
 			logger.Log.Infow("До проверки", "id", req.ID)
-			err = db.QueryRow(query, req.ID).Scan(
+			err, oldMetric, oldName = requestSelectDB(r.Context(), db, req, query)
+			/*err = db.QueryRow(query, req.ID).Scan(
 				&oldMetric, &oldName,
 			)
 			if err != nil {
 				if err == sql.ErrNoRows {
 					logger.Log.Infow("<UNK> <UNK>", "id", req.ID)
 				}
-			}
+			}*/
 			logger.Log.Infow("После запроса")
 			if len(oldName) > 0 {
 				logger.Log.Infow("строка не пустая")
@@ -419,29 +420,32 @@ func requestDB(ctx context.Context, db *sql.DB, req models.Metrics, query string
 	return err
 }
 
-func requestSelectDB(ctx context.Context, db *sql.DB, req models.Metrics, query string) (err error) {
+func requestSelectDB(ctx context.Context, db *sql.DB, req models.Metrics, query string) (err error, metric *int64, name string) {
 
 	timer := time.NewTimer(time.Duration(0) * time.Second)
 	defer timer.Stop()
 	var pgErr *pgconn.PgError
 	for i := 1; i <= 5; i += 2 {
 
-		_, err = db.Exec(query, req.ID, req.Value, req.Delta, req.MType)
-		if err == nil {
-			logger.Log.Infow("Подключились к базе без ошибок")
-			return nil
+		err = db.QueryRow(query, req.ID).Scan(
+			&metric, &name,
+		)
+		if err != nil {
+			if err == sql.ErrNoRows {
+				logger.Log.Infow("<UNK> <UNK>", "id", req.ID)
+			}
 		}
 
 		if !(errors.As(err, &pgErr) && pgerrcode.IsConnectionException(pgErr.Code)) {
-			return err
+			return err, metric, name
 		}
 		timer.Reset(time.Duration(i) * time.Second)
 		select {
 		case <-timer.C:
 			logger.Log.Infow("Ошибка при подключении к базе")
 		case <-ctx.Done():
-			return err
+			return err, nil, ""
 		}
 	}
-	return err
+	return err, nil, ""
 }
