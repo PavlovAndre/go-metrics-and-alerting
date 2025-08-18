@@ -83,6 +83,10 @@ func UpdateDB(db *sql.DB) http.HandlerFunc {
 			logger.Log.Infow("До проверки", "id", req.ID)
 			//Проверяем есть ли в базе метрика
 			oldMetric2, err = requestSelectDB(r.Context(), db, req, query)
+			if err != nil {
+				logger.Log.Infow("Ошибка чтения метрик")
+				return
+			}
 			logger.Log.Infow("После запроса")
 			//if len(oldName) > 0 {
 			if len(oldMetric2.ID) > 0 {
