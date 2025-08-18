@@ -64,33 +64,30 @@ func UpdateDB(db *sql.DB) http.HandlerFunc {
 
 		//Для типа Counter получаем предыдущее значение для суммирования
 		logger.Log.Infow("До oldmetric", "id", req.ID)
-		var oldMetric *int64
-		var oldName string
+		//var oldMetric *int64
+		//var oldName string
+		var oldMetric2 models.Metrics
 		if req.MType == "counter" {
 			if req.Delta == nil {
 				HTTPError(w, "Bad value", http.StatusBadRequest)
 				return
 			}
 			query := `
-					SELECT delta, name
+					SELECT name, value, delta, type 
 					FROM metrics
-					WHERE name = $1
+					WHERE name = $1 AND type = $2
 					`
-
+			/*SELECT delta, name
+			FROM metrics
+			WHERE name = $1*/
 			logger.Log.Infow("До проверки", "id", req.ID)
-			err, oldMetric, oldName = requestSelectDB(r.Context(), db, req, query)
-			/*err = db.QueryRow(query, req.ID).Scan(
-				&oldMetric, &oldName,
-			)
-			if err != nil {
-				if err == sql.ErrNoRows {
-					logger.Log.Infow("<UNK> <UNK>", "id", req.ID)
-				}
-			}*/
+			//Проверяем есть ли в базе метрика
+			oldMetric2, err = requestSelectDB(r.Context(), db, req, query)
 			logger.Log.Infow("После запроса")
-			if len(oldName) > 0 {
+			//if len(oldName) > 0 {
+			if len(oldMetric2.ID) > 0 {
 				logger.Log.Infow("строка не пустая")
-				newDelta := *req.Delta + *oldMetric
+				newDelta := *req.Delta + *oldMetric2.Delta
 				req.Delta = &newDelta
 			} else {
 				logger.Log.Infow("строка пустая")
@@ -420,15 +417,16 @@ func requestDB(ctx context.Context, db *sql.DB, req models.Metrics, query string
 	return err
 }
 
-func requestSelectDB(ctx context.Context, db *sql.DB, req models.Metrics, query string) (err error, metric *int64, name string) {
+func requestSelectDB(ctx context.Context, db *sql.DB, req models.Metrics, query string) ( /*metric *int64, name string*/ oldMetric models.Metrics, err error) {
 
 	timer := time.NewTimer(time.Duration(0) * time.Second)
 	defer timer.Stop()
 	var pgErr *pgconn.PgError
 	for i := 1; i <= 5; i += 2 {
 
-		err = db.QueryRow(query, req.ID).Scan(
-			&metric, &name,
+		err = db.QueryRow(query, req.ID, req.MType).Scan(
+			//&metric, &name,
+			&oldMetric.ID, &oldMetric.Value, &oldMetric.Delta, &oldMetric.MType,
 		)
 		if err != nil {
 			if err == sql.ErrNoRows {
@@ -437,15 +435,18 @@ func requestSelectDB(ctx context.Context, db *sql.DB, req models.Metrics, query 
 		}
 
 		if !(errors.As(err, &pgErr) && pgerrcode.IsConnectionException(pgErr.Code)) {
-			return err, metric, name
+			//return metric, name, err
+			return oldMetric, err
 		}
 		timer.Reset(time.Duration(i) * time.Second)
 		select {
 		case <-timer.C:
 			logger.Log.Infow("Ошибка при подключении к базе")
 		case <-ctx.Done():
-			return err, nil, ""
+			//return nil, "", err
+			return oldMetric, err
 		}
 	}
-	return err, nil, ""
+	//return nil, "", err
+	return oldMetric, err
 }
