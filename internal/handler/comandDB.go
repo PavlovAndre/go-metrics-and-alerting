@@ -85,7 +85,7 @@ func UpdateDB(db *sql.DB) http.HandlerFunc {
 			oldMetric2, err = requestSelectDB(r.Context(), db, req, query)
 			if err != nil {
 				logger.Log.Infow("Ошибка чтения метрик")
-				return
+				//return
 			}
 			logger.Log.Infow("После запроса")
 			//if len(oldName) > 0 {
@@ -103,14 +103,14 @@ func UpdateDB(db *sql.DB) http.HandlerFunc {
 				return
 			}
 		}
-		query := `
-					INSERT INTO metrics (name, value, delta, type)
-					VALUES ($1, $2, $3, $4)
-					ON CONFLICT (name) DO UPDATE
-					SET value = EXCLUDED.value, delta = EXCLUDED.delta, type = EXCLUDED.type;
-					`
+		/*query := `
+		INSERT INTO metrics (name, value, delta, type)
+		VALUES ($1, $2, $3, $4)
+		ON CONFLICT (name) DO UPDATE
+		SET value = EXCLUDED.value, delta = EXCLUDED.delta, type = EXCLUDED.type;
+		`*/
 		// Запись в базу новых метрик
-		err = requestDB(r.Context(), db, req, query)
+		err = requestDB(r.Context(), db, req, queryUpdate)
 
 		if err != nil {
 			logger.Log.Error("failed to add metric", zap.Error(err))
