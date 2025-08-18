@@ -332,19 +332,25 @@ func UpdatesDB(db *sql.DB) http.HandlerFunc {
 			if req.MType == "counter" {
 				//Для типа Counter получаем предыдущее значение для суммирования
 				logger.Log.Infow("Counter До oldmetric", "id", req.ID)
-				var oldMetric *int64
-				var oldName string
+				//var oldMetric *int64
+				//var oldName string
+				var oldMetric2 models.Metrics
 				var newDelta int64
+				/*query := `
+				SELECT delta, name
+				FROM metrics
+				WHERE name = $1
+				`*/
 				query := `
-					SELECT delta, name
+					SELECT name, value, delta, type 
 					FROM metrics
-					WHERE name = $1
+					WHERE name = $1 AND type = $2
 					`
-
 				logger.Log.Infow("До проверки", "id", req.ID)
-				err = db.QueryRow(query, req.ID).Scan(
+				oldMetric2, err = requestSelectDB(r.Context(), db, req, query)
+				/*err = db.QueryRow(query, req.ID).Scan(
 					&oldMetric, &oldName,
-				)
+				)*/
 				if err != nil {
 					if err == sql.ErrNoRows {
 						logger.Log.Infow("<UNK> <UNK>", "id", req.ID)
@@ -359,9 +365,9 @@ func UpdatesDB(db *sql.DB) http.HandlerFunc {
 					logger.Log.Infow("Добавили к существующей", "добавили", newDelta, "counters", counters[req.ID])
 
 				} else {
-					if len(oldName) > 0 {
-						newDelta = *req.Delta + *oldMetric
-						logger.Log.Infow("строка не пустая", "newDelta", newDelta, "oldMetric", oldMetric)
+					if len(oldMetric2.ID) > 0 {
+						newDelta = *req.Delta + *oldMetric2.Delta
+						logger.Log.Infow("строка не пустая", "newDelta", newDelta, "oldMetric", oldMetric2.Delta)
 						//req.Delta = &newDelta
 					} else {
 						newDelta = *req.Delta
@@ -384,7 +390,8 @@ func UpdatesDB(db *sql.DB) http.HandlerFunc {
 			}
 
 		}
-		err = tx.Commit()
+		//err = tx.Commit()
+		err = requestCommitDB(r.Context(), db, tx)
 		if err != nil {
 			logger.Log.Infow("<UNK> <UNK> <UNK>", "err", err)
 			return
@@ -485,4 +492,35 @@ func requestSelectAllDB(ctx context.Context, db *sql.DB, query string) (rows *sq
 	}
 	//return nil, "", err
 	return rows, err
+}
+
+func requestCommitDB(ctx context.Context, db *sql.DB, tx *sql.Tx) (err error) {
+
+	timer := time.NewTimer(time.Duration(0) * time.Second)
+	defer timer.Stop()
+	var pgErr *pgconn.PgError
+	for i := 1; i <= 5; i += 2 {
+
+		err = tx.Commit()
+		if err != nil {
+			if err == sql.ErrNoRows {
+				logger.Log.Infow("Нет строк")
+			}
+		}
+
+		if !(errors.As(err, &pgErr) && pgerrcode.IsConnectionException(pgErr.Code)) {
+			//return metric, name, err
+			return err
+		}
+		timer.Reset(time.Duration(i) * time.Second)
+		select {
+		case <-timer.C:
+			logger.Log.Infow("Ошибка при подключении к базе")
+		case <-ctx.Done():
+			//return nil, "", err
+			return err
+		}
+	}
+	//return nil, "", err
+	return err
 }
