@@ -101,16 +101,13 @@ func UpdateDB(db *sql.DB) http.HandlerFunc {
 				return
 			}
 		}
-		// Запись в базу новых метрик
 		query := `
 					INSERT INTO metrics (name, value, delta, type)
 					VALUES ($1, $2, $3, $4)
 					ON CONFLICT (name) DO UPDATE
 					SET value = EXCLUDED.value, delta = EXCLUDED.delta, type = EXCLUDED.type;
 					`
-		//timer := time.NewTimer(time.Duration(0) * time.Second)
-		//defer timer.Stop()
-
+		// Запись в базу новых метрик
 		err = requestDB(r.Context(), db, req, query)
 
 		if err != nil {
@@ -396,6 +393,7 @@ func UpdatesDB(db *sql.DB) http.HandlerFunc {
 }
 
 func requestDB(ctx context.Context, db *sql.DB, req models.Metrics, query string) (err error) {
+
 	timer := time.NewTimer(time.Duration(0) * time.Second)
 	defer timer.Stop()
 	var pgErr *pgconn.PgError
@@ -414,7 +412,33 @@ func requestDB(ctx context.Context, db *sql.DB, req models.Metrics, query string
 		select {
 		case <-timer.C:
 			logger.Log.Infow("Ошибка при подключении к базе")
-			//timer.Reset(time.Duration(i) * time.Second)
+		case <-ctx.Done():
+			return err
+		}
+	}
+	return err
+}
+
+func requestSelectDB(ctx context.Context, db *sql.DB, req models.Metrics, query string) (err error) {
+
+	timer := time.NewTimer(time.Duration(0) * time.Second)
+	defer timer.Stop()
+	var pgErr *pgconn.PgError
+	for i := 1; i <= 5; i += 2 {
+
+		_, err = db.Exec(query, req.ID, req.Value, req.Delta, req.MType)
+		if err == nil {
+			logger.Log.Infow("Подключились к базе без ошибок")
+			return nil
+		}
+
+		if !(errors.As(err, &pgErr) && pgerrcode.IsConnectionException(pgErr.Code)) {
+			return err
+		}
+		timer.Reset(time.Duration(i) * time.Second)
+		select {
+		case <-timer.C:
+			logger.Log.Infow("Ошибка при подключении к базе")
 		case <-ctx.Done():
 			return err
 		}
