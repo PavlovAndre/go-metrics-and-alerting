@@ -229,7 +229,8 @@ func AllDB(db *sql.DB) http.HandlerFunc {
 		gauges := make(map[string]float64)
 		counters := make(map[string]int64)
 
-		rows, err := db.Query(query)
+		//rows, err := db.Query(query)
+		rows, err := requestSelectAllDB(r.Context(), db, query)
 		if rows.Err() != nil {
 			logger.Log.Errorw("<UNK> <UNK>", "query", query)
 			return
@@ -421,7 +422,7 @@ func requestDB(ctx context.Context, db *sql.DB, req models.Metrics, query string
 	return err
 }
 
-func requestSelectDB(ctx context.Context, db *sql.DB, req models.Metrics, query string) ( /*metric *int64, name string*/ oldMetric models.Metrics, err error) {
+func requestSelectDB(ctx context.Context, db *sql.DB, req models.Metrics, query string) (oldMetric models.Metrics, err error) {
 
 	timer := time.NewTimer(time.Duration(0) * time.Second)
 	defer timer.Stop()
@@ -453,4 +454,35 @@ func requestSelectDB(ctx context.Context, db *sql.DB, req models.Metrics, query 
 	}
 	//return nil, "", err
 	return oldMetric, err
+}
+
+func requestSelectAllDB(ctx context.Context, db *sql.DB, query string) (rows *sql.Rows, err error) {
+
+	timer := time.NewTimer(time.Duration(0) * time.Second)
+	defer timer.Stop()
+	var pgErr *pgconn.PgError
+	for i := 1; i <= 5; i += 2 {
+
+		rows, err := db.Query(query)
+		if err != nil {
+			if err == sql.ErrNoRows {
+				logger.Log.Infow("Нет строк")
+			}
+		}
+
+		if !(errors.As(err, &pgErr) && pgerrcode.IsConnectionException(pgErr.Code)) {
+			//return metric, name, err
+			return rows, err
+		}
+		timer.Reset(time.Duration(i) * time.Second)
+		select {
+		case <-timer.C:
+			logger.Log.Infow("Ошибка при подключении к базе")
+		case <-ctx.Done():
+			//return nil, "", err
+			return rows, err
+		}
+	}
+	//return nil, "", err
+	return rows, err
 }
