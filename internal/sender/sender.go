@@ -241,7 +241,7 @@ func (s *Sender) SendMetricsBatchJSONPeriod(ctx context.Context) {
 }
 
 func (s *Sender) SendStoredData() error {
-	//metricsToSend := append(data.Metrics, data.PollCount)
+	//metricsToSend := append(data.Metrics, data.PollCount )
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
