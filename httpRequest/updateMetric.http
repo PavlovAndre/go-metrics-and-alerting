@@ -1,5 +1,5 @@
 ### Post counter
-POST http://localhost:8080/update/counter/someMetric2/527
+POST http://localhost:8080/update/counter/someMetric/527
 Content-Type: text/plain
 
 ### Post gauge
@@ -18,6 +18,62 @@ Accept: text/plain
 GET http://localhost:8080/
 Accept: text/plain
 
+
 ### GET
 GET http://localhost:8080/value/counter/someMetric2
 Accept: text/plain
+
+###Post Json update
+POST http://localhost:8080/update/
+Content-Type: application/json
+
+
+{
+  "id": "PollCount",
+  "type": "counter",
+  "delta": 45
+
+}
+
+###Post Json value
+POST http://localhost:8080/value/
+Content-Type: application/json
+
+
+{
+  "id": "PollCount",
+  "type": "counter"
+}
+
+###Post EmptyJson value
+POST http://localhost:8080/value/
+Content-Type: application/json
+
+###Post EmptyJson value
+POST /value/ HTTP/1.1
+Host: localhost:8080
+Accept: application/json
+Content-Type: application/json
+Accept-Encoding: gzap
+User-Agent: go-resty/2.7.0
+
+{
+  "id": "PollCount",
+  "type": "counter"
+}
+
+###Get INFO
+
+GET / HTTP/1.1
+Host: localhost:8080
+Accept: text/html
+Accept-Encoding: gzip
+User-Agent: go-resty/2.7.0
+
+
+###Get INFO
+ POST /value/ HTTP/1.1
+Host: localhost:8080
+Accept: application/json
+Content-Type: application/json
+User-Agent: go-resty/2.7.0

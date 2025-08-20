@@ -27,6 +27,7 @@ func flagAddr(fs *flag.FlagSet) config.AgentOption {
 	fs.StringVar(&addrFlag, "a", "localhost:8080", "address server")
 
 	return func(cfg *config.AgentCfg) {
+		//Проверка есть ли значение в переменной окружения
 		if env := os.Getenv("ADDRESS"); env != "" {
 			cfg.AddrServer = env
 			return
