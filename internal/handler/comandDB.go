@@ -12,13 +12,6 @@ import (
 	"net/http"
 )
 
-const queryUpdate = `
-					INSERT INTO metrics (name, value, delta, type)
-					VALUES ($1, $2, $3, $4)
-					ON CONFLICT (name) DO UPDATE
-					SET value = EXCLUDED.value, delta = EXCLUDED.delta, type = EXCLUDED.type;
-					`
-
 func UpdateDB(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		logger.Log.Infow("Запущена функция UpdateDB")

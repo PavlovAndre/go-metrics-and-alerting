@@ -14,6 +14,13 @@ import (
 	"time"
 )
 
+const queryUpdate = `
+					INSERT INTO metrics (name, value, delta, type)
+					VALUES ($1, $2, $3, $4)
+					ON CONFLICT (name) DO UPDATE
+					SET value = EXCLUDED.value, delta = EXCLUDED.delta, type = EXCLUDED.type;
+					`
+
 // updateOneMetric записывыает изменения одной метрики в базу
 func updateOneMetric(req models.Metrics, db *sql.DB, r *http.Request) (errorTxt string, code int) {
 	// Проверям, что введен правильный тип метрик

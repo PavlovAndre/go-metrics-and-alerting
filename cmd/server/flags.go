@@ -84,13 +84,20 @@ func restore(fs *flag.FlagSet) config.ServerOption {
 	fs.BoolVar(&restoreFlag, "r", false, "need to restore metrics")
 
 	return func(cfg *config.ServerCfg) {
-		if env := os.Getenv("RESTORE"); env != "" {
+		/*if env := os.Getenv("RESTORE"); env != "" {
 			if v, err := strconv.ParseBool(env); err == nil {
 				cfg.Restore = v
 				return
 			}
 			return
+		}*/
+		if val, ok := os.LookupEnv("RESTORE"); ok {
+			if v, err := strconv.ParseBool(val); err == nil {
+				cfg.Restore = v
+				return
+			}
 		}
+
 		cfg.Restore = restoreFlag
 	}
 }
