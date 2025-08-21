@@ -50,70 +50,14 @@ func UpdateDB(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
+		//Отправляем запрос в базу
 		errorText, code := updateOneMetric(req, db, r)
-		/*
-			// Проверям, что введен правильный тип метрик
-			if req.MType != "gauge" && req.MType != "counter" {
-				HTTPError(w, "Bad type of metric", http.StatusBadRequest)
-				return
-			}
 
-			//Проверка, что имя метрики не пустое
-			if req.ID == "" {
-				http.NotFound(w, r)
-				return
-			}
-
-			//Для типа Counter получаем предыдущее значение для суммирования
-			logger.Log.Infow("До oldmetric", "id", req.ID)
-
-			var oldMetric2 models.Metrics
-			if req.MType == "counter" {
-				if req.Delta == nil {
-					HTTPError(w, "Bad value", http.StatusBadRequest)
-					return
-				}
-				query := `
-						SELECT name, value, delta, type
-						FROM metrics
-						WHERE name = $1 AND type = $2
-						`
-
-				logger.Log.Infow("До проверки", "id", req.ID)
-				//Проверяем есть ли в базе метрика
-				oldMetric2, err = requestSelectDB(r.Context(), db, req, query)
-				if err != nil {
-					logger.Log.Infow("Ошибка чтения метрик")
-					//return
-				}
-				logger.Log.Infow("После запроса")
-				//if len(oldName) > 0 {
-				if len(oldMetric2.ID) > 0 {
-					logger.Log.Infow("строка не пустая")
-					newDelta := *req.Delta + *oldMetric2.Delta
-					req.Delta = &newDelta
-				} else {
-					logger.Log.Infow("строка пустая")
-				}
-			}
-			if req.MType == "gauge" {
-				if req.Value == nil {
-					HTTPError(w, "Bad value", http.StatusBadRequest)
-					return
-				}
-			}
-
-			// Запись в базу новых метрик
-			err = requestDB(r.Context(), db, req, queryUpdate)
-
-			if err != nil {
-				logger.Log.Error("failed to add metric", zap.Error(err))
-				return
-			}*/
 		if code != 0 {
 			HTTPError(w, errorText, code)
 			return
 		}
+
 		w.Write([]byte("{}"))
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
@@ -148,36 +92,73 @@ func ValueDB(db *sql.DB) http.HandlerFunc {
 			HTTPError(w, "internal server error", http.StatusInternalServerError)
 			return
 		}
-		// Проверям, что введен правильный тип метрик
-		if req.MType != "gauge" && req.MType != "counter" {
-			HTTPError(w, "Bad type of metric", http.StatusBadRequest)
-			return
-		}
+		/*
+			// Проверям, что введен правильный тип метрик
+			if req.MType != "gauge" && req.MType != "counter" {
+				HTTPError(w, "Bad type of metric", http.StatusBadRequest)
+				return
+			}
 
-		//Проверка, что имя метрики не пустое
-		if req.ID == "" {
-			//http.NotFound(w, r)
-			HTTPError(w, "{}", http.StatusNotFound)
-			return
-		}
-
-		query := `
-					SELECT name, value, delta, type 
-					FROM metrics
-					WHERE name = $1 AND type = $2
-					`
-		req, err = requestSelectDB(r.Context(), db, req, query)
-		/*err = db.QueryRow(query, req.ID, req.MType).Scan(
-			&req.ID, &req.Value, &req.Delta, &req.MType,
-		)*/
-		if err != nil {
-			if errors.Is(err, pgx.ErrNoRows) {
-				logger.Log.Debug("metric not found", zap.String("name", req.ID))
+			//Проверка, что имя метрики не пустое
+			if req.ID == "" {
+				//http.NotFound(w, r)
 				HTTPError(w, "{}", http.StatusNotFound)
 				return
 			}
-			logger.Log.Infow("failed to get metric", zap.Error(err))
-			HTTPError(w, "{}", http.StatusNotFound)
+
+			query := `
+						SELECT name, value, delta, type
+						FROM metrics
+						WHERE name = $1 AND type = $2
+						`
+			req, err = requestSelectDB(r.Context(), db, req, query)
+			if err != nil {
+				if errors.Is(err, pgx.ErrNoRows) {
+					logger.Log.Debug("metric not found", zap.String("name", req.ID))
+					HTTPError(w, "{}", http.StatusNotFound)
+					return
+				}
+				logger.Log.Infow("failed to get metric", zap.Error(err))
+				HTTPError(w, "{}", http.StatusNotFound)
+				return
+			}
+
+			logger.Log.Infow("До каунтер")
+			if req.MType == "counter" {
+				logger.Log.Infow("Тип каутнер")
+				body, err := json.Marshal(req)
+
+				if err != nil {
+					logger.Log.Infow("Error marshalling json: %s\n", err)
+					HTTPError(w, "{}", http.StatusInternalServerError)
+					return
+				}
+
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				w.Write(body)
+				return
+
+			}
+			if req.MType == "gauge" {
+				body, err := json.Marshal(req)
+				if err != nil {
+					log.Printf("Error marshalling json: %s\n", err)
+					HTTPError(w, "{}", http.StatusInternalServerError)
+					return
+				}
+
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				w.Write(body)
+				return
+
+			}*/
+		//Отправляем запрос в базу
+		req, code, errorText := readOneMetric(req, db, r)
+
+		if code != 0 {
+			HTTPError(w, errorText, code)
 			return
 		}
 
@@ -189,6 +170,9 @@ func ValueDB(db *sql.DB) http.HandlerFunc {
 			if err != nil {
 				logger.Log.Infow("Error marshalling json: %s\n", err)
 				HTTPError(w, "{}", http.StatusInternalServerError)
+				/*errorTxt = ""
+				code = http.StatusInternalServerError
+				return reqDB, code, errorTxt*/
 				return
 			}
 
@@ -203,16 +187,16 @@ func ValueDB(db *sql.DB) http.HandlerFunc {
 			if err != nil {
 				log.Printf("Error marshalling json: %s\n", err)
 				HTTPError(w, "{}", http.StatusInternalServerError)
-				return
+				/*errorTxt = ""
+				code = http.StatusInternalServerError
+				return reqDB, code, errorTxt*/return
 			}
 
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusOK)
 			w.Write(body)
 			return
-
 		}
-
 	}
 }
 

@@ -2,12 +2,15 @@ package handler
 
 import (
 	"database/sql"
+	"errors"
 	"github.com/PavlovAndre/go-metrics-and-alerting.git/internal/logger"
 	models "github.com/PavlovAndre/go-metrics-and-alerting.git/internal/model"
+	"github.com/jackc/pgx/v5"
 	"go.uber.org/zap"
 	"net/http"
 )
 
+// updateOneMetric записывыает изменения одной метрики в базу
 func updateOneMetric(req models.Metrics, db *sql.DB, r *http.Request) (errorTxt string, code int) {
 	// Проверям, что введен правильный тип метрик
 	errorTxt = ""
@@ -78,4 +81,47 @@ func updateOneMetric(req models.Metrics, db *sql.DB, r *http.Request) (errorTxt 
 		return errorTxt, code
 	}
 	return errorTxt, code
+}
+
+// readOneMetric считывает одну метрику из базы
+func readOneMetric(req models.Metrics, db *sql.DB, r *http.Request) (reqDB models.Metrics, code int, errorTxt string) {
+	// Проверям, что введен правильный тип метрик
+	if req.MType != "gauge" && req.MType != "counter" {
+		//HTTPError(w, "Bad type of metric", http.StatusBadRequest)
+		errorTxt = "Bad type of metric"
+		code = http.StatusBadRequest
+		return reqDB, code, errorTxt
+	}
+
+	//Проверка, что имя метрики не пустое
+	if req.ID == "" {
+		//http.NotFound(w, r)
+		//HTTPError(w, "{}", http.StatusNotFound)
+		errorTxt = ""
+		code = http.StatusNotFound
+		return reqDB, code, errorTxt
+	}
+
+	query := `
+					SELECT name, value, delta, type 
+					FROM metrics
+					WHERE name = $1 AND type = $2
+					`
+	reqDB, err := requestSelectDB(r.Context(), db, req, query)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			logger.Log.Debug("metric not found", zap.String("name", reqDB.ID))
+			//HTTPError(w, "{}", http.StatusNotFound)
+			errorTxt = ""
+			code = http.StatusNotFound
+			return reqDB, code, errorTxt
+		}
+		logger.Log.Infow("failed to get metric", zap.Error(err))
+		//HTTPError(w, "{}", http.StatusNotFound)
+		errorTxt = ""
+		code = http.StatusNotFound
+		return reqDB, code, errorTxt
+	}
+	return reqDB, code, errorTxt
+
 }
