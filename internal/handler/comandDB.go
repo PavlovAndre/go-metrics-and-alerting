@@ -163,16 +163,13 @@ func ValueDB(db *sql.DB) http.HandlerFunc {
 		}
 
 		logger.Log.Infow("До каунтер")
-		if req.MType == "counter" {
+		/*/if req.MType == "counter" {
 			logger.Log.Infow("Тип каутнер")
 			body, err := json.Marshal(req)
 
 			if err != nil {
 				logger.Log.Infow("Error marshalling json: %s\n", err)
 				HTTPError(w, "{}", http.StatusInternalServerError)
-				/*errorTxt = ""
-				code = http.StatusInternalServerError
-				return reqDB, code, errorTxt*/
 				return
 			}
 
@@ -181,16 +178,16 @@ func ValueDB(db *sql.DB) http.HandlerFunc {
 			w.Write(body)
 			return
 
-		}
-		if req.MType == "gauge" {
-			body, err := json.Marshal(req)
-			if err != nil {
-				log.Printf("Error marshalling json: %s\n", err)
-				HTTPError(w, "{}", http.StatusInternalServerError)
-				/*errorTxt = ""
-				code = http.StatusInternalServerError
-				return reqDB, code, errorTxt*/return
-			}
+		//}*/
+		//if req.MType == "gauge" {
+		body, err := json.Marshal(req)
+		if err != nil {
+			log.Printf("Error marshalling json: %s\n", err)
+			HTTPError(w, "{}", http.StatusInternalServerError)
+			/*errorTxt = ""
+			code = http.StatusInternalServerError
+			return reqDB, code, errorTxt*/return
+			//}
 
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusOK)
