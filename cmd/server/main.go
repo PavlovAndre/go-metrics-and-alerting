@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"database/sql"
 	"github.com/PavlovAndre/go-metrics-and-alerting.git/internal/compress"
 	"github.com/PavlovAndre/go-metrics-and-alerting.git/internal/config"
@@ -15,7 +16,6 @@ import (
 	"os"
 	"os/signal"
 	"sync"
-	"syscall"
 )
 
 func main() {
@@ -26,9 +26,9 @@ func main() {
 		log.Fatal(err)
 	}
 
-	// Канал для сигналов
-	quit := make(chan os.Signal, 1)
-	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	// Контекст закрытия приложения
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
+	defer stop()
 
 	// Инициализируем логер
 	lgr, err := logger.New(config.LogLevel)
@@ -122,8 +122,8 @@ func main() {
 
 	go func() {
 		defer wg.Done()
-		// Ожидание сигнала
-		<-quit
+		// Ожидание сигнала завершения
+		<-ctx.Done()
 		log.Println("Получен сигнал завершения")
 		if config.FileStorage != "" {
 			fileStore.WriteEnd(config.FileStorage)
