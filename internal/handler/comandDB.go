@@ -1,20 +1,15 @@
 package handler
 
 import (
-	"context"
 	"database/sql"
 	"encoding/json"
-	"errors"
 	"github.com/PavlovAndre/go-metrics-and-alerting.git/internal/logger"
 	models "github.com/PavlovAndre/go-metrics-and-alerting.git/internal/model"
-	"github.com/jackc/pgerrcode"
-	"github.com/jackc/pgx/v5/pgconn"
 	"go.uber.org/zap"
 	"html/template"
 	"io"
 	"log"
 	"net/http"
-	"time"
 )
 
 const queryUpdate = `
@@ -118,56 +113,6 @@ func ValueDB(db *sql.DB) http.HandlerFunc {
 func AllDB(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		logger.Log.Infow("Start AllDB")
-		//var metricDB: metrics{gauges, counters}
-		//gauges := make(map[string]float64)
-		//counters := make(map[string]int64)
-		/*query := `
-		SELECT name, value, delta, type
-		FROM metrics;
-		`
-		gauges := make(map[string]float64)
-		counters := make(map[string]int64)
-
-		//rows, err := db.Query(query)
-		rows, err := requestSelectAllDB(r.Context(), db, query)
-		if rows.Err() != nil {
-			logger.Log.Errorw("<UNK> <UNK>", "query", query)
-			return
-		}
-		if err != nil {
-			if errors.Is(err, pgx.ErrNoRows) {
-				logger.Log.Debug("metric not found")
-				return
-			}
-			logger.Log.Infow("failed to list metrics", zap.Error(err))
-			return
-		}
-		//var metricsDB []*models.Metrics
-		logger.Log.Infow("До rows.Next")
-		for rows.Next() {
-			var metric models.Metrics
-			err = rows.Scan(&metric.ID, &metric.Value, &metric.Delta, &metric.MType)
-			if err != nil {
-				logger.Log.Error("failed to scan metric", zap.Error(err))
-				continue
-			}
-			//logger.Log.Infow("Перед присвоением метрик gauge", "gauge", *metric.Value, "id", metric.ID)
-			if metric.MType == "gauge" {
-				logger.Log.Infow("Перед присвоением метрик gauge", "gauge", *metric.Value, "id", metric.ID)
-				if metric.Value != nil {
-					gauges[metric.ID] = *metric.Value
-				}
-			}
-			//logger.Log.Infow("Перед присвоением метрик counter", "counter", *metric.Delta)
-			if metric.MType == "counter" {
-				logger.Log.Infow("Перед присвоением метрик counter", "counter", *metric.Delta, "id", metric.ID)
-				if metric.Delta != nil {
-					counters[metric.ID] = *metric.Delta
-				}
-			}
-			logger.Log.Infow("После counter")
-
-		}*/
 		metricDB, code, errorText := readAllMetrics(db, r)
 
 		if code != 0 {
@@ -215,217 +160,86 @@ func UpdatesDB(db *sql.DB) http.HandlerFunc {
 			HTTPError(w, "internal server error", http.StatusInternalServerError)
 			return
 		}
+		/*
+			var (
+				counters = make(map[string]int64)
+			)
 
-		var (
-			//gauges   = make(map[string]float64)
-			counters = make(map[string]int64)
-		)
-		logger.Log.Infow("Значение мапы counters", "counters", counters)
-		//Начало транзакции
-		tx, err := db.Begin()
-		if err != nil {
-			logger.Log.Infow("Ошибка начала транзакции", "err", err)
-			return
-		}
-		defer tx.Rollback()
-
-		for _, req := range reqs {
-			if req.ID == "" {
-				HTTPError(w, "internal server error", http.StatusInternalServerError)
+			//Начало транзакции
+			tx, err := db.Begin()
+			if err != nil {
+				logger.Log.Infow("Ошибка начала транзакции", "err", err)
 				return
 			}
-			if req.MType == "counter" {
-				//Для типа Counter получаем предыдущее значение для суммирования
-				logger.Log.Infow("Counter До oldmetric", "id", req.ID)
-				//var oldMetric *int64
-				//var oldName string
-				var oldMetric2 models.Metrics
-				var newDelta int64
-				/*query := `
-				SELECT delta, name
-				FROM metrics
-				WHERE name = $1
-				`*/
-				query := `
-					SELECT name, value, delta, type 
-					FROM metrics
-					WHERE name = $1 AND type = $2
-					`
-				logger.Log.Infow("До проверки", "id", req.ID)
-				oldMetric2, err = requestSelectDB(r.Context(), db, req, query)
-				/*err = db.QueryRow(query, req.ID).Scan(
-					&oldMetric, &oldName,
-				)*/
-				if err != nil {
-					if err == sql.ErrNoRows {
-						logger.Log.Infow("<UNK> <UNK>", "id", req.ID)
-					}
+			defer tx.Rollback()
+
+			for _, req := range reqs {
+				if req.ID == "" {
+					HTTPError(w, "internal server error", http.StatusInternalServerError)
+					return
 				}
-				logger.Log.Infow("После запроса")
+				if req.MType == "counter" {
+					//Для типа Counter получаем предыдущее значение для суммирования
+					logger.Log.Infow("Counter До oldmetric", "id", req.ID)
+					var oldMetric2 models.Metrics
+					var newDelta int64
 
-				if _, exists := counters[req.ID]; exists {
-					logger.Log.Infow("Метрика есть", "newDelta = ", newDelta)
-					//newDelta = newDelta + counters[req.ID]
-					newDelta = counters[req.ID] + *req.Delta
-					logger.Log.Infow("Добавили к существующей", "добавили", newDelta, "counters", counters[req.ID])
+					query := `
+						SELECT name, value, delta, type
+						FROM metrics
+						WHERE name = $1 AND type = $2
+						`
+					logger.Log.Infow("До проверки", "id", req.ID)
+					oldMetric2, err = requestSelectDB(r.Context(), db, req, query)
+					if err != nil {
+						if err == sql.ErrNoRows {
+							logger.Log.Infow("<UNK> <UNK>", "id", req.ID)
+						}
+					}
+					logger.Log.Infow("После запроса")
 
-				} else {
-					if len(oldMetric2.ID) > 0 {
-						newDelta = *req.Delta + *oldMetric2.Delta
-						logger.Log.Infow("строка не пустая", "newDelta", newDelta, "oldMetric", oldMetric2.Delta)
-						//req.Delta = &newDelta
+					if _, exists := counters[req.ID]; exists {
+						logger.Log.Infow("Метрика есть", "newDelta = ", newDelta)
+						newDelta = counters[req.ID] + *req.Delta
+						logger.Log.Infow("Добавили к существующей", "добавили", newDelta, "counters", counters[req.ID])
+
 					} else {
-						newDelta = *req.Delta
-						logger.Log.Infow("строка пустая", "newDelta", newDelta)
+						if len(oldMetric2.ID) > 0 {
+							newDelta = *req.Delta + *oldMetric2.Delta
+							logger.Log.Infow("строка не пустая", "newDelta", newDelta, "oldMetric", oldMetric2.Delta)
+						} else {
+							newDelta = *req.Delta
+							logger.Log.Infow("строка пустая", "newDelta", newDelta)
+						}
+						logger.Log.Infow("Метрика отсутствует")
+						logger.Log.Infow("Новая NewDelta", "добавили", newDelta, "id", req.ID)
 					}
-					logger.Log.Infow("Метрика отсутствует")
-					//newDelta = *req.Delta
-					logger.Log.Infow("Новая NewDelta", "добавили", newDelta, "id", req.ID)
+					req.Delta = &newDelta
+					counters[req.ID] = newDelta
 				}
-				req.Delta = &newDelta
-				counters[req.ID] = newDelta
-				//logger.Log.Infow("Значение мапы2 counters", "counters", counters)
-			}
 
-			_, err := tx.Exec(queryUpdate, req.ID, req.Value, req.Delta, req.MType)
-			//logger.Log.Infow("tx.Exec", "tx.Exec", arts)
+				_, err := tx.Exec(queryUpdate, req.ID, req.Value, req.Delta, req.MType)
+				if err != nil {
+					logger.Log.Infow("<UNK> <UNK> <UNK>", "err", err)
+					return
+				}
+
+			}
+			err = requestCommitDB(r.Context(), db, tx)
 			if err != nil {
 				logger.Log.Infow("<UNK> <UNK> <UNK>", "err", err)
 				return
 			}
+		*/
+		//Отправляем запрос в базу
+		code, errorText := updateManyMetrics(reqs, db, r)
 
-		}
-		//err = tx.Commit()
-		err = requestCommitDB(r.Context(), db, tx)
-		if err != nil {
-			logger.Log.Infow("<UNK> <UNK> <UNK>", "err", err)
+		if code != 0 {
+			HTTPError(w, errorText, code)
 			return
 		}
 		logger.Log.Infow("Метрики добавлены")
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 	}
-}
-
-func requestDB(ctx context.Context, db *sql.DB, req models.Metrics, query string) (err error) {
-
-	timer := time.NewTimer(time.Duration(0) * time.Second)
-	defer timer.Stop()
-	var pgErr *pgconn.PgError
-	for i := 1; i <= 5; i += 2 {
-
-		_, err = db.Exec(query, req.ID, req.Value, req.Delta, req.MType)
-		if err == nil {
-			logger.Log.Infow("Подключились к базе без ошибок")
-			return nil
-		}
-
-		if !(errors.As(err, &pgErr) && pgerrcode.IsConnectionException(pgErr.Code)) {
-			return err
-		}
-		timer.Reset(time.Duration(i) * time.Second)
-		select {
-		case <-timer.C:
-			logger.Log.Infow("Ошибка при подключении к базе")
-		case <-ctx.Done():
-			return err
-		}
-	}
-	return err
-}
-
-func requestSelectDB(ctx context.Context, db *sql.DB, req models.Metrics, query string) (oldMetric models.Metrics, err error) {
-
-	timer := time.NewTimer(time.Duration(0) * time.Second)
-	defer timer.Stop()
-	var pgErr *pgconn.PgError
-	for i := 1; i <= 5; i += 2 {
-
-		err = db.QueryRow(query, req.ID, req.MType).Scan(
-			//&metric, &name,
-			&oldMetric.ID, &oldMetric.Value, &oldMetric.Delta, &oldMetric.MType,
-		)
-		if err != nil {
-			if err == sql.ErrNoRows {
-				logger.Log.Infow("<UNK> <UNK>", "id", req.ID)
-			}
-		}
-
-		if !(errors.As(err, &pgErr) && pgerrcode.IsConnectionException(pgErr.Code)) {
-			//return metric, name, err
-			return oldMetric, err
-		}
-		timer.Reset(time.Duration(i) * time.Second)
-		select {
-		case <-timer.C:
-			logger.Log.Infow("Ошибка при подключении к базе")
-		case <-ctx.Done():
-			//return nil, "", err
-			return oldMetric, err
-		}
-	}
-	//return nil, "", err
-	return oldMetric, err
-}
-
-func requestSelectAllDB(ctx context.Context, db *sql.DB, query string) (rows *sql.Rows, err error) {
-
-	timer := time.NewTimer(time.Duration(0) * time.Second)
-	defer timer.Stop()
-	var pgErr *pgconn.PgError
-	for i := 1; i <= 5; i += 2 {
-
-		rows, err := db.Query(query)
-		if err != nil {
-			if err == sql.ErrNoRows {
-				logger.Log.Infow("Нет строк")
-			}
-		}
-
-		if !(errors.As(err, &pgErr) && pgerrcode.IsConnectionException(pgErr.Code)) {
-			//return metric, name, err
-			return rows, err
-		}
-		timer.Reset(time.Duration(i) * time.Second)
-		select {
-		case <-timer.C:
-			logger.Log.Infow("Ошибка при подключении к базе")
-		case <-ctx.Done():
-			//return nil, "", err
-			return rows, err
-		}
-	}
-	//return nil, "", err
-	return rows, err
-}
-
-func requestCommitDB(ctx context.Context, db *sql.DB, tx *sql.Tx) (err error) {
-
-	timer := time.NewTimer(time.Duration(0) * time.Second)
-	defer timer.Stop()
-	var pgErr *pgconn.PgError
-	for i := 1; i <= 5; i += 2 {
-
-		err = tx.Commit()
-		if err != nil {
-			if err == sql.ErrNoRows {
-				logger.Log.Infow("Нет строк")
-			}
-		}
-
-		if !(errors.As(err, &pgErr) && pgerrcode.IsConnectionException(pgErr.Code)) {
-			//return metric, name, err
-			return err
-		}
-		timer.Reset(time.Duration(i) * time.Second)
-		select {
-		case <-timer.C:
-			logger.Log.Infow("Ошибка при подключении к базе")
-		case <-ctx.Done():
-			//return nil, "", err
-			return err
-		}
-	}
-	//return nil, "", err
-	return err
 }
