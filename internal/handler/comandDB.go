@@ -28,8 +28,8 @@ const queryUpdate = `
 func UpdateDB(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		logger.Log.Infow("Запущена функция UpdateDB")
-		//Проверяем, что метод POST
 
+		//Проверяем, что метод POST
 		if r.Method != http.MethodPost {
 			HTTPError(w, "method not allowed", http.StatusMethodNotAllowed)
 			return
@@ -50,77 +50,74 @@ func UpdateDB(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
-		// Проверям, что введен правильный тип метрик
-		if req.MType != "gauge" && req.MType != "counter" {
-			HTTPError(w, "Bad type of metric", http.StatusBadRequest)
-			return
-		}
-
-		//Проверка, что имя метрики не пустое
-		if req.ID == "" {
-			http.NotFound(w, r)
-			return
-		}
-
-		//Для типа Counter получаем предыдущее значение для суммирования
-		logger.Log.Infow("До oldmetric", "id", req.ID)
-		//var oldMetric *int64
-		//var oldName string
-		var oldMetric2 models.Metrics
-		if req.MType == "counter" {
-			if req.Delta == nil {
-				HTTPError(w, "Bad value", http.StatusBadRequest)
+		errorText, code := updateOneMetric(req, db, r)
+		/*
+			// Проверям, что введен правильный тип метрик
+			if req.MType != "gauge" && req.MType != "counter" {
+				HTTPError(w, "Bad type of metric", http.StatusBadRequest)
 				return
 			}
-			query := `
-					SELECT name, value, delta, type 
-					FROM metrics
-					WHERE name = $1 AND type = $2
-					`
-			/*SELECT delta, name
-			FROM metrics
-			WHERE name = $1*/
-			logger.Log.Infow("До проверки", "id", req.ID)
-			//Проверяем есть ли в базе метрика
-			oldMetric2, err = requestSelectDB(r.Context(), db, req, query)
+
+			//Проверка, что имя метрики не пустое
+			if req.ID == "" {
+				http.NotFound(w, r)
+				return
+			}
+
+			//Для типа Counter получаем предыдущее значение для суммирования
+			logger.Log.Infow("До oldmetric", "id", req.ID)
+
+			var oldMetric2 models.Metrics
+			if req.MType == "counter" {
+				if req.Delta == nil {
+					HTTPError(w, "Bad value", http.StatusBadRequest)
+					return
+				}
+				query := `
+						SELECT name, value, delta, type
+						FROM metrics
+						WHERE name = $1 AND type = $2
+						`
+
+				logger.Log.Infow("До проверки", "id", req.ID)
+				//Проверяем есть ли в базе метрика
+				oldMetric2, err = requestSelectDB(r.Context(), db, req, query)
+				if err != nil {
+					logger.Log.Infow("Ошибка чтения метрик")
+					//return
+				}
+				logger.Log.Infow("После запроса")
+				//if len(oldName) > 0 {
+				if len(oldMetric2.ID) > 0 {
+					logger.Log.Infow("строка не пустая")
+					newDelta := *req.Delta + *oldMetric2.Delta
+					req.Delta = &newDelta
+				} else {
+					logger.Log.Infow("строка пустая")
+				}
+			}
+			if req.MType == "gauge" {
+				if req.Value == nil {
+					HTTPError(w, "Bad value", http.StatusBadRequest)
+					return
+				}
+			}
+
+			// Запись в базу новых метрик
+			err = requestDB(r.Context(), db, req, queryUpdate)
+
 			if err != nil {
-				logger.Log.Infow("Ошибка чтения метрик")
-				//return
-			}
-			logger.Log.Infow("После запроса")
-			//if len(oldName) > 0 {
-			if len(oldMetric2.ID) > 0 {
-				logger.Log.Infow("строка не пустая")
-				newDelta := *req.Delta + *oldMetric2.Delta
-				req.Delta = &newDelta
-			} else {
-				logger.Log.Infow("строка пустая")
-			}
-		}
-		if req.MType == "gauge" {
-			if req.Value == nil {
-				HTTPError(w, "Bad value", http.StatusBadRequest)
+				logger.Log.Error("failed to add metric", zap.Error(err))
 				return
-			}
-		}
-		/*query := `
-		INSERT INTO metrics (name, value, delta, type)
-		VALUES ($1, $2, $3, $4)
-		ON CONFLICT (name) DO UPDATE
-		SET value = EXCLUDED.value, delta = EXCLUDED.delta, type = EXCLUDED.type;
-		`*/
-		// Запись в базу новых метрик
-		err = requestDB(r.Context(), db, req, queryUpdate)
-
-		if err != nil {
-			logger.Log.Error("failed to add metric", zap.Error(err))
+			}*/
+		if code != 0 {
+			HTTPError(w, errorText, code)
 			return
 		}
 		w.Write([]byte("{}"))
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		logger.Log.Debug("metric added successfully", zap.String("name", req.ID))
-		//return
 	}
 }
 
