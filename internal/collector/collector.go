@@ -21,7 +21,6 @@ func (c *Collector) CollectMetrics() {
 	for {
 		ticker := time.NewTicker(time.Duration(c.pollInterval) * time.Second)
 		for range ticker.C {
-			//log.Printf("Start func CollectMetrics")
 
 			m := runtime.MemStats{}
 			runtime.ReadMemStats(&m)
