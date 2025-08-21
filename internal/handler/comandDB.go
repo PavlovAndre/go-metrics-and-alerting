@@ -8,7 +8,6 @@ import (
 	"github.com/PavlovAndre/go-metrics-and-alerting.git/internal/logger"
 	models "github.com/PavlovAndre/go-metrics-and-alerting.git/internal/model"
 	"github.com/jackc/pgerrcode"
-	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"go.uber.org/zap"
 	"html/template"
@@ -92,68 +91,7 @@ func ValueDB(db *sql.DB) http.HandlerFunc {
 			HTTPError(w, "internal server error", http.StatusInternalServerError)
 			return
 		}
-		/*
-			// Проверям, что введен правильный тип метрик
-			if req.MType != "gauge" && req.MType != "counter" {
-				HTTPError(w, "Bad type of metric", http.StatusBadRequest)
-				return
-			}
 
-			//Проверка, что имя метрики не пустое
-			if req.ID == "" {
-				//http.NotFound(w, r)
-				HTTPError(w, "{}", http.StatusNotFound)
-				return
-			}
-
-			query := `
-						SELECT name, value, delta, type
-						FROM metrics
-						WHERE name = $1 AND type = $2
-						`
-			req, err = requestSelectDB(r.Context(), db, req, query)
-			if err != nil {
-				if errors.Is(err, pgx.ErrNoRows) {
-					logger.Log.Debug("metric not found", zap.String("name", req.ID))
-					HTTPError(w, "{}", http.StatusNotFound)
-					return
-				}
-				logger.Log.Infow("failed to get metric", zap.Error(err))
-				HTTPError(w, "{}", http.StatusNotFound)
-				return
-			}
-
-			logger.Log.Infow("До каунтер")
-			if req.MType == "counter" {
-				logger.Log.Infow("Тип каутнер")
-				body, err := json.Marshal(req)
-
-				if err != nil {
-					logger.Log.Infow("Error marshalling json: %s\n", err)
-					HTTPError(w, "{}", http.StatusInternalServerError)
-					return
-				}
-
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusOK)
-				w.Write(body)
-				return
-
-			}
-			if req.MType == "gauge" {
-				body, err := json.Marshal(req)
-				if err != nil {
-					log.Printf("Error marshalling json: %s\n", err)
-					HTTPError(w, "{}", http.StatusInternalServerError)
-					return
-				}
-
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusOK)
-				w.Write(body)
-				return
-
-			}*/
 		//Отправляем запрос в базу
 		req, code, errorText := readOneMetric(req, db, r)
 
@@ -163,43 +101,27 @@ func ValueDB(db *sql.DB) http.HandlerFunc {
 		}
 
 		logger.Log.Infow("До каунтер")
-		/*/if req.MType == "counter" {
-			logger.Log.Infow("Тип каутнер")
-			body, err := json.Marshal(req)
 
-			if err != nil {
-				logger.Log.Infow("Error marshalling json: %s\n", err)
-				HTTPError(w, "{}", http.StatusInternalServerError)
-				return
-			}
-
-			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(http.StatusOK)
-			w.Write(body)
-			return
-
-		//}*/
-		//if req.MType == "gauge" {
 		body, err := json.Marshal(req)
 		if err != nil {
 			log.Printf("Error marshalling json: %s\n", err)
 			HTTPError(w, "{}", http.StatusInternalServerError)
-			/*errorTxt = ""
-			code = http.StatusInternalServerError
-			return reqDB, code, errorTxt*/return
+			return
 		}
 
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		w.Write(body)
-		//return
 	}
 }
 
 func AllDB(db *sql.DB) http.HandlerFunc {
-	return func(response http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
 		logger.Log.Infow("Start AllDB")
-		query := `
+		//var metricDB: metrics{gauges, counters}
+		//gauges := make(map[string]float64)
+		//counters := make(map[string]int64)
+		/*query := `
 		SELECT name, value, delta, type
 		FROM metrics;
 		`
@@ -245,19 +167,25 @@ func AllDB(db *sql.DB) http.HandlerFunc {
 			}
 			logger.Log.Infow("После counter")
 
+		}*/
+		metricDB, code, errorText := readAllMetrics(db, r)
+
+		if code != 0 {
+			HTTPError(w, errorText, code)
+			return
 		}
-		logger.Log.Infow("<UNK> <UNK>", "gauges", gauges, "counters", counters)
+		logger.Log.Infow("<UNK> <UNK>", "gauges", metricDB.Gauge, "counters", metricDB.Counter)
 		t, err := template.New("templ").Parse(TemplateHTML)
 		if err != nil {
 			log.Printf("Failed to Allmetrics: %v", err)
-			response.WriteHeader(http.StatusInternalServerError)
+			w.WriteHeader(http.StatusInternalServerError)
 		}
-		if err := t.Execute(response, metrics{gauges, counters}); err != nil {
+		if err := t.Execute(w, metricDB); err != nil {
 			log.Printf("Failed to Allmetrics: %v", err)
-			response.WriteHeader(http.StatusInternalServerError)
+			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
-		response.Header().Set("Content-Type", "application/json")
+		w.Header().Set("Content-Type", "application/json")
 	}
 }
 

@@ -125,3 +125,56 @@ func readOneMetric(req models.Metrics, db *sql.DB, r *http.Request) (reqDB model
 	return reqDB, code, errorTxt
 
 }
+
+// readAllMetrics считывает все метрики из базы
+func readAllMetrics(db *sql.DB, r *http.Request) (allMetrics metrics, code int, errorTxt string) {
+	query := `
+		SELECT name, value, delta, type
+		FROM metrics;
+		`
+	//gauges := make(map[string]float64)
+	//counters := make(map[string]int64)
+
+	//rows, err := db.Query(query)
+	rows, err := requestSelectAllDB(r.Context(), db, query)
+	if rows.Err() != nil {
+		logger.Log.Errorw("<UNK> <UNK>", "query", query)
+		return allMetrics, code, errorTxt
+	}
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			logger.Log.Debug("metric not found")
+			return allMetrics, code, errorTxt
+		}
+		logger.Log.Infow("failed to list metrics", zap.Error(err))
+		return allMetrics, code, errorTxt
+	}
+	//var metricsDB []*models.Metrics
+	logger.Log.Infow("До rows.Next")
+	for rows.Next() {
+		var metric models.Metrics
+		err = rows.Scan(&metric.ID, &metric.Value, &metric.Delta, &metric.MType)
+		if err != nil {
+			logger.Log.Error("failed to scan metric", zap.Error(err))
+			//continue
+			return allMetrics, code, errorTxt
+		}
+		//logger.Log.Infow("Перед присвоением метрик gauge", "gauge", *metric.Value, "id", metric.ID)
+		if metric.MType == "gauge" {
+			logger.Log.Infow("Перед присвоением метрик gauge", "gauge", *metric.Value, "id", metric.ID)
+			if metric.Value != nil {
+				allMetrics.Gauge[metric.ID] = *metric.Value
+			}
+		}
+		//logger.Log.Infow("Перед присвоением метрик counter", "counter", *metric.Delta)
+		if metric.MType == "counter" {
+			logger.Log.Infow("Перед присвоением метрик counter", "counter", *metric.Delta, "id", metric.ID)
+			if metric.Delta != nil {
+				allMetrics.Counter[metric.ID] = *metric.Delta
+			}
+		}
+		logger.Log.Infow("После counter")
+		return allMetrics, code, errorTxt
+	}
+	return allMetrics, code, errorTxt
+}
