@@ -163,7 +163,6 @@ func UpdateJSON(store *repository.MemStore) http.HandlerFunc {
 			HTTPError(w, "method not allowed", http.StatusMethodNotAllowed)
 			return
 		}
-		//w.Header().Set("Content-Type", "application/json")
 		var req models.Metrics
 		buf, err := io.ReadAll(r.Body)
 		if err != nil {
@@ -391,7 +390,6 @@ func GetPing(db *sql.DB) http.HandlerFunc {
 		if err != nil {
 			logger.Log.Infow("Error pinging database: ", err)
 			HTTPError(w, "unable to ping database", http.StatusInternalServerError)
-			//w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
 		logger.Log.Infow("Ping done")

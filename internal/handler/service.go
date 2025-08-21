@@ -35,7 +35,6 @@ func updateOneMetric(req models.Metrics, db *sql.DB, r *http.Request) (errorTxt 
 
 	//Проверка, что имя метрики не пустое
 	if req.ID == "" {
-		//http.NotFound(w, r)
 		errorTxt = "NotFound"
 		code = http.StatusNotFound
 		return errorTxt, code
@@ -47,7 +46,6 @@ func updateOneMetric(req models.Metrics, db *sql.DB, r *http.Request) (errorTxt 
 	if req.MType == "counter" {
 		var oldMetric3 models.Metrics
 		if req.Delta == nil {
-			//HTTPError(w, "Bad value", http.StatusBadRequest)
 			errorTxt = "Bad value"
 			code = http.StatusBadRequest
 			return errorTxt, code
@@ -63,10 +61,8 @@ func updateOneMetric(req models.Metrics, db *sql.DB, r *http.Request) (errorTxt 
 		oldMetric3, err := requestSelectDB(r.Context(), db, req, query)
 		if err != nil {
 			logger.Log.Infow("Ошибка чтения метрик")
-			//return
 		}
 		logger.Log.Infow("После запроса")
-		//if len(oldName) > 0 {
 		if len(oldMetric3.ID) > 0 {
 			logger.Log.Infow("строка не пустая")
 			newDelta := *req.Delta + *oldMetric3.Delta
@@ -77,7 +73,6 @@ func updateOneMetric(req models.Metrics, db *sql.DB, r *http.Request) (errorTxt 
 	}
 	if req.MType == "gauge" {
 		if req.Value == nil {
-			//HTTPError(w, "Bad value", http.StatusBadRequest)
 			errorTxt = "Bad value"
 			code = http.StatusBadRequest
 			return errorTxt, code
@@ -98,7 +93,6 @@ func updateOneMetric(req models.Metrics, db *sql.DB, r *http.Request) (errorTxt 
 func readOneMetric(req models.Metrics, db *sql.DB, r *http.Request) (reqDB models.Metrics, code int, errorTxt string) {
 	// Проверям, что введен правильный тип метрик
 	if req.MType != "gauge" && req.MType != "counter" {
-		//HTTPError(w, "Bad type of metric", http.StatusBadRequest)
 		errorTxt = "Bad type of metric"
 		code = http.StatusBadRequest
 		return reqDB, code, errorTxt
@@ -106,8 +100,6 @@ func readOneMetric(req models.Metrics, db *sql.DB, r *http.Request) (reqDB model
 
 	//Проверка, что имя метрики не пустое
 	if req.ID == "" {
-		//http.NotFound(w, r)
-		//HTTPError(w, "{}", http.StatusNotFound)
 		errorTxt = ""
 		code = http.StatusNotFound
 		return reqDB, code, errorTxt
@@ -122,13 +114,11 @@ func readOneMetric(req models.Metrics, db *sql.DB, r *http.Request) (reqDB model
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			logger.Log.Debug("metric not found", zap.String("name", reqDB.ID))
-			//HTTPError(w, "{}", http.StatusNotFound)
 			errorTxt = ""
 			code = http.StatusNotFound
 			return reqDB, code, errorTxt
 		}
 		logger.Log.Infow("failed to get metric", zap.Error(err))
-		//HTTPError(w, "{}", http.StatusNotFound)
 		errorTxt = ""
 		code = http.StatusNotFound
 		return reqDB, code, errorTxt
@@ -143,10 +133,7 @@ func readAllMetrics(db *sql.DB, r *http.Request) (allMetrics metrics, code int, 
 		SELECT name, value, delta, type
 		FROM metrics;
 		`
-	//gauges := make(map[string]float64)
-	//counters := make(map[string]int64)
 
-	//rows, err := db.Query(query)
 	rows, err := requestSelectAllDB(r.Context(), db, query)
 	if rows.Err() != nil {
 		logger.Log.Errorw("<UNK> <UNK>", "query", query)
@@ -160,7 +147,7 @@ func readAllMetrics(db *sql.DB, r *http.Request) (allMetrics metrics, code int, 
 		logger.Log.Infow("failed to list metrics", zap.Error(err))
 		return allMetrics, code, errorTxt
 	}
-	//var metricsDB []*models.Metrics
+
 	logger.Log.Infow("До rows.Next")
 	for rows.Next() {
 		var metric models.Metrics
@@ -168,16 +155,16 @@ func readAllMetrics(db *sql.DB, r *http.Request) (allMetrics metrics, code int, 
 		if err != nil {
 			logger.Log.Error("failed to scan metric", zap.Error(err))
 			continue
-			//return allMetrics, code, errorTxt
+
 		}
-		//logger.Log.Infow("Перед присвоением метрик gauge", "gauge", *metric.Value, "id", metric.ID)
+
 		if metric.MType == "gauge" {
 			logger.Log.Infow("Перед присвоением метрик gauge", "gauge", *metric.Value, "id", metric.ID)
 			if metric.Value != nil {
 				allMetrics.Gauge[metric.ID] = *metric.Value
 			}
 		}
-		//logger.Log.Infow("Перед присвоением метрик counter", "counter", *metric.Delta)
+
 		if metric.MType == "counter" {
 			logger.Log.Infow("Перед присвоением метрик counter", "counter", *metric.Delta, "id", metric.ID)
 			if metric.Delta != nil {
@@ -206,13 +193,11 @@ func updateManyMetrics(reqs []models.Metrics, db *sql.DB, r *http.Request) (code
 
 	for _, req := range reqs {
 		if req.ID == "" {
-			//HTTPError(w, "internal server error", http.StatusInternalServerError)
 			errorTxt = "internal server error"
 			code = http.StatusInternalServerError
 			return code, errorTxt
 		}
 		if req.MType == "counter" {
-			//Для типа Counter получаем предыдущее значение для суммирования
 			logger.Log.Infow("Counter До oldmetric", "id", req.ID)
 			var oldMetric2 models.Metrics
 			var newDelta int64
@@ -301,7 +286,6 @@ func requestSelectDB(ctx context.Context, db *sql.DB, req models.Metrics, query 
 	for i := 1; i <= 5; i += 2 {
 
 		err = db.QueryRow(query, req.ID, req.MType).Scan(
-			//&metric, &name,
 			&oldMetric.ID, &oldMetric.Value, &oldMetric.Delta, &oldMetric.MType,
 		)
 		if err != nil {
@@ -311,7 +295,6 @@ func requestSelectDB(ctx context.Context, db *sql.DB, req models.Metrics, query 
 		}
 
 		if !(errors.As(err, &pgErr) && pgerrcode.IsConnectionException(pgErr.Code)) {
-			//return metric, name, err
 			return oldMetric, err
 		}
 		timer.Reset(time.Duration(i) * time.Second)
@@ -319,11 +302,9 @@ func requestSelectDB(ctx context.Context, db *sql.DB, req models.Metrics, query 
 		case <-timer.C:
 			logger.Log.Infow("Ошибка при подключении к базе")
 		case <-ctx.Done():
-			//return nil, "", err
 			return oldMetric, err
 		}
 	}
-	//return nil, "", err
 	return oldMetric, err
 }
 
@@ -342,7 +323,6 @@ func requestSelectAllDB(ctx context.Context, db *sql.DB, query string) (rows *sq
 		}
 
 		if !(errors.As(err, &pgErr) && pgerrcode.IsConnectionException(pgErr.Code)) {
-			//return metric, name, err
 			return rows, err
 		}
 		timer.Reset(time.Duration(i) * time.Second)
@@ -350,11 +330,9 @@ func requestSelectAllDB(ctx context.Context, db *sql.DB, query string) (rows *sq
 		case <-timer.C:
 			logger.Log.Infow("Ошибка при подключении к базе")
 		case <-ctx.Done():
-			//return nil, "", err
 			return rows, err
 		}
 	}
-	//return nil, "", err
 	return rows, err
 }
 
@@ -373,7 +351,6 @@ func requestCommitDB(ctx context.Context, db *sql.DB, tx *sql.Tx) (err error) {
 		}
 
 		if !(errors.As(err, &pgErr) && pgerrcode.IsConnectionException(pgErr.Code)) {
-			//return metric, name, err
 			return err
 		}
 		timer.Reset(time.Duration(i) * time.Second)
@@ -381,10 +358,8 @@ func requestCommitDB(ctx context.Context, db *sql.DB, tx *sql.Tx) (err error) {
 		case <-timer.C:
 			logger.Log.Infow("Ошибка при подключении к базе")
 		case <-ctx.Done():
-			//return nil, "", err
 			return err
 		}
 	}
-	//return nil, "", err
 	return err
 }
