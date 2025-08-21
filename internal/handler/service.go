@@ -156,8 +156,8 @@ func readAllMetrics(db *sql.DB, r *http.Request) (allMetrics metrics, code int, 
 		err = rows.Scan(&metric.ID, &metric.Value, &metric.Delta, &metric.MType)
 		if err != nil {
 			logger.Log.Error("failed to scan metric", zap.Error(err))
-			//continue
-			return allMetrics, code, errorTxt
+			continue
+			//return allMetrics, code, errorTxt
 		}
 		//logger.Log.Infow("Перед присвоением метрик gauge", "gauge", *metric.Value, "id", metric.ID)
 		if metric.MType == "gauge" {
