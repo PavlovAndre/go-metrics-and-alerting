@@ -30,8 +30,12 @@ func addr(fs *flag.FlagSet) config.ServerOption {
 	fs.StringVar(&addrFlag, "a", "localhost:8080", "address and port to run server")
 
 	return func(cfg *config.ServerCfg) {
-		if env := os.Getenv("ADDRESS"); env != "" {
+		/*if env := os.Getenv("ADDRESS"); env != "" {
 			cfg.AddrServer = env
+			return
+		}*/
+		if val, ok := os.LookupEnv("ADDRESS"); ok {
+			cfg.AddrServer = val
 			return
 		}
 		cfg.AddrServer = addrFlag
@@ -43,8 +47,12 @@ func logLvl(fs *flag.FlagSet) config.ServerOption {
 	fs.StringVar(&lvlFlag, "l", "info", "log level")
 
 	return func(cfg *config.ServerCfg) {
-		if env := os.Getenv("LOG_LEVEL"); env != "" {
+		/*if env := os.Getenv("LOG_LEVEL"); env != "" {
 			cfg.LogLevel = env
+			return
+		}*/
+		if val, ok := os.LookupEnv("LOG_LEVEL"); ok {
+			cfg.LogLevel = val
 			return
 		}
 		cfg.LogLevel = lvlFlag
@@ -56,11 +64,15 @@ func storeInterval(fs *flag.FlagSet) config.ServerOption {
 	fs.IntVar(&storeIntervalFlag, "i", 2, "period of save metrics. 0 is sync mode")
 
 	return func(cfg *config.ServerCfg) {
-		if env := os.Getenv("STORE_INTERVAL"); env != "" {
+		/*if env := os.Getenv("STORE_INTERVAL"); env != "" {
 			if v, err := strconv.Atoi(env); err == nil {
 				cfg.StoreInterval = v
 				return
 			}
+		}*/
+		if val, ok := os.LookupEnv("STORE_INTERVAL"); ok {
+			cfg.StoreInterval, _ = strconv.Atoi(val)
+			return
 		}
 		cfg.StoreInterval = storeIntervalFlag
 	}
@@ -71,8 +83,12 @@ func fileStorage(fs *flag.FlagSet) config.ServerOption {
 	fs.StringVar(&fileStorageFlag, "f", "" /*"storage.txt"*/, "path to file storage to use")
 
 	return func(cfg *config.ServerCfg) {
-		if env := os.Getenv("FILE_STORAGE_PATH"); env != "" {
+		/*if env := os.Getenv("FILE_STORAGE_PATH"); env != "" {
 			cfg.FileStorage = env
+			return
+		}*/
+		if val, ok := os.LookupEnv("FILE_STORAGE_PATH"); ok {
+			cfg.FileStorage = val
 			return
 		}
 		cfg.FileStorage = fileStorageFlag
@@ -110,8 +126,12 @@ func databaseDSN(fs *flag.FlagSet) config.ServerOption {
 		"connection string for database")
 
 	return func(cfg *config.ServerCfg) {
-		if env := os.Getenv("DATABASE_DSN"); env != "" {
+		/*if env := os.Getenv("DATABASE_DSN"); env != "" {
 			cfg.Database = env
+			return
+		}*/
+		if val, ok := os.LookupEnv("DATABASE_DSN"); ok {
+			cfg.Database = val
 			return
 		}
 		cfg.Database = databaseFlag
