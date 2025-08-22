@@ -310,7 +310,7 @@ func (s *Sender) SendMetrics2() error {
 	}
 
 	// Устанавливаем подпись тела
-	bodyHash, hashErr := s.hashBody(compressBody)
+	bodyHash, hashErr := s.hashBody(body)
 	if hashErr != nil {
 		log.Println("Cant hash body", err)
 	} else {
@@ -335,7 +335,7 @@ func (s *Sender) SendMetrics2() error {
 	req.Header.Set("Accept-Encoding", "gzip")
 	resp, err := client.Do(req)
 	if err != nil {
-		log.Printf("ошибка отправки запроса")
+		log.Printf("ошибка отправки запроса %s", err)
 		return err
 	}
 	resp.Body.Close()
