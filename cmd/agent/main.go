@@ -24,7 +24,7 @@ func main() {
 	wg.Add(2)
 	store := repository.New()
 	coll := collector.New(store, config.PollInterval)
-	send := sender.New(store, config.ReportInterval, config.AddrServer)
+	send := sender.New(store, config.ReportInterval, config.AddrServer, config.HashKey)
 
 	go func() {
 		logger.Log.Infow("Starting collector")

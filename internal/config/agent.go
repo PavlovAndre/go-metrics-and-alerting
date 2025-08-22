@@ -4,6 +4,7 @@ type AgentCfg struct {
 	AddrServer     string
 	PollInterval   int
 	ReportInterval int
+	HashKey        string
 }
 
 type AgentOption func(*AgentCfg)

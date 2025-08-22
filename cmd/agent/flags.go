@@ -14,6 +14,7 @@ func parseFlags() (*config.AgentCfg, error) {
 		flagAddr(fs),
 		flagPollInterval(fs),
 		flagReportInterval(fs),
+		flagHashKey(fs),
 	}
 	err := fs.Parse(os.Args[1:])
 	if err != nil {
@@ -28,10 +29,6 @@ func flagAddr(fs *flag.FlagSet) config.AgentOption {
 
 	return func(cfg *config.AgentCfg) {
 		//Проверка есть ли значение в переменной окружения
-		/*if env := os.Getenv("ADDRESS"); env != "" {
-			cfg.AddrServer = env
-			return
-		}*/
 		if val, ok := os.LookupEnv("ADDRESS"); ok {
 			cfg.AddrServer = val
 			return
@@ -45,12 +42,6 @@ func flagPollInterval(fs *flag.FlagSet) config.AgentOption {
 	fs.IntVar(&pollInterval, "p", 2, "poll interval")
 
 	return func(cfg *config.AgentCfg) {
-		/*if env := os.Getenv("POLL_INTERVAL"); env != "" {
-			if v, err := strconv.Atoi(env); err == nil {
-				cfg.PollInterval = v
-				return
-			}
-		}*/
 		if val, ok := os.LookupEnv("POLL_INTERVAL"); ok {
 			if v, err := strconv.Atoi(val); err == nil {
 				cfg.PollInterval = v
@@ -66,12 +57,6 @@ func flagReportInterval(fs *flag.FlagSet) config.AgentOption {
 	fs.IntVar(&reportInterval, "r", 10, "report interval")
 
 	return func(cfg *config.AgentCfg) {
-		/*if env := os.Getenv("REPORT_INTERVAL"); env != "" {
-			if v, err := strconv.Atoi(env); err == nil {
-				cfg.ReportInterval = v
-				return
-			}
-		}*/
 		if val, ok := os.LookupEnv("REPORT_INTERVAL"); ok {
 			if v, err := strconv.Atoi(val); err == nil {
 				cfg.ReportInterval = v
@@ -79,5 +64,17 @@ func flagReportInterval(fs *flag.FlagSet) config.AgentOption {
 			}
 		}
 		cfg.ReportInterval = reportInterval
+	}
+}
+
+func flagHashKey(fs *flag.FlagSet) config.AgentOption {
+	var hashKey string
+	fs.StringVar(&hashKey, "k", "", "hash key")
+
+	return func(cfg *config.AgentCfg) {
+		if val, ok := os.LookupEnv("KEY"); ok {
+			cfg.HashKey = val
+		}
+		cfg.HashKey = hashKey
 	}
 }

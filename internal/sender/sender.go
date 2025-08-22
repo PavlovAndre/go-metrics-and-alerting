@@ -3,6 +3,9 @@ package sender
 import (
 	"bytes"
 	"context"
+	"crypto/hmac"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -22,12 +25,13 @@ type Sender struct {
 	memStore       *repository.MemStore
 	reportInterval int
 	addrServer     string
+	hashKey        string
 }
 
 var ErrUnableToSendMetrics = errors.New("unable to send metrics")
 
-func New(store *repository.MemStore, sendInt int, addr string) *Sender {
-	return &Sender{memStore: store, reportInterval: sendInt, addrServer: addr}
+func New(store *repository.MemStore, sendInt int, addr string, key string) *Sender {
+	return &Sender{memStore: store, reportInterval: sendInt, addrServer: addr, hashKey: key}
 }
 
 // SendMetrics Функция отправки метрик
@@ -97,7 +101,6 @@ func (s *Sender) SendMetricsJSON() {
 					log.Printf("ошибка создания запроса")
 					continue
 				}
-				//req.Header.Set("Content-Type", "application/json")
 				req.Header.Set("Content-Encoding", "gzip")
 				req.Header.Set("Accept-Encoding", "gzip")
 				resp, err := client.Do(req)
@@ -106,7 +109,6 @@ func (s *Sender) SendMetricsJSON() {
 					continue
 				}
 				resp.Body.Close()
-				//fmt.Println(resp)
 			}
 
 			for key, value := range s.memStore.GetCounters() {
@@ -140,7 +142,6 @@ func (s *Sender) SendMetricsJSON() {
 					continue
 				}
 				req.Body.Close()
-				//req.Header.Set("Content-Type", "application/json")
 				req.Header.Set("Content-Encoding", "gzip")
 				req.Header.Set("Accept-Encoding", "gzip")
 				resp, err := client.Do(req)
@@ -171,7 +172,6 @@ func (s *Sender) SendMetricsBatchJSON() {
 				}
 				metrics = append(metrics, send)
 			}
-			//log.Printf("Gauges %v", metrics)
 			for key, value := range s.memStore.GetCounters() {
 				send := models.Metrics{
 					ID:    key,
@@ -180,13 +180,11 @@ func (s *Sender) SendMetricsBatchJSON() {
 				}
 				metrics = append(metrics, send)
 			}
-			//log.Printf("Counters %v", metrics)
 			body, err := json.Marshal(metrics)
 			if err != nil {
 				log.Printf("Error marshalling json: %s\n", err)
 				continue
 			}
-			//log.Printf("Body %v", body)
 			compressBody, err := compress.GZIPCompress(body)
 			if err != nil {
 				log.Printf("Error compressing json: %s\n", err)
@@ -207,7 +205,6 @@ func (s *Sender) SendMetricsBatchJSON() {
 				log.Printf("ошибка создания запроса")
 				continue
 			}
-			//req.Header.Set("Content-Type", "application/json")
 			req.Header.Set("Content-Encoding", "gzip")
 			req.Header.Set("Accept-Encoding", "gzip")
 			resp, err := client.Do(req)
@@ -241,7 +238,6 @@ func (s *Sender) SendMetricsBatchJSONPeriod(ctx context.Context) {
 }
 
 func (s *Sender) SendStoredData() error {
-	//metricsToSend := append(data.Metrics, data.PollCount )
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
@@ -284,10 +280,7 @@ func (s *Sender) retrySend() {
 
 func (s *Sender) SendMetrics2() error {
 	log.Printf("Start func SendMetrics2")
-	//s.metricsCollection.Lock()
-	//defer s.metricsCollection.Unlock()
-	log.Printf("прошли mutex")
-
+	client := &http.Client{}
 	var metrics []models.Metrics
 	for key, value := range s.memStore.GetGauges() {
 		send := models.Metrics{
@@ -297,7 +290,6 @@ func (s *Sender) SendMetrics2() error {
 		}
 		metrics = append(metrics, send)
 	}
-	//log.Printf("Gauges %v", metrics)
 	for key, value := range s.memStore.GetCounters() {
 		send := models.Metrics{
 			ID:    key,
@@ -306,16 +298,22 @@ func (s *Sender) SendMetrics2() error {
 		}
 		metrics = append(metrics, send)
 	}
-	//log.Printf("Counters %v", metrics)
 	body, err := json.Marshal(metrics)
 	if err != nil {
 		log.Printf("Error marshalling json: %s\n", err)
 		return err
 	}
-	//log.Printf("Body %v", body)
 	compressBody, err := compress.GZIPCompress(body)
 	if err != nil {
 		log.Printf("Error compressing json: %s\n", err)
+	}
+
+	// Устанавливаем подпись тела
+	bodyHash, hashErr := s.hashBody(compressBody)
+	if hashErr != nil {
+		log.Println("Cant hash body", err)
+	} else {
+		//req.Header.Set("HashSHA256", bodyHash)
 	}
 
 	sendURL := fmt.Sprintf("http://%s/updates/", s.addrServer)
@@ -326,14 +324,12 @@ func (s *Sender) SendMetrics2() error {
 	}
 	conn.Close()
 
-	client := &http.Client{}
-
 	req, err := http.NewRequest("POST", sendURL, bytes.NewReader(compressBody))
 	if err != nil {
 		log.Printf("ошибка создания запроса")
 		return err
 	}
-	//req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("HashSHA256", bodyHash)
 	req.Header.Set("Content-Encoding", "gzip")
 	req.Header.Set("Accept-Encoding", "gzip")
 	resp, err := client.Do(req)
@@ -344,4 +340,14 @@ func (s *Sender) SendMetrics2() error {
 	resp.Body.Close()
 	s.memStore.SetCounter("PollCount", 0)
 	return nil
+}
+
+// hashBody создаём подпись запроса
+func (s *Sender) hashBody(body []byte) (string, error) {
+	if s.hashKey == "" {
+		return "", errors.New("hash key is empty")
+	}
+	harsher := hmac.New(sha256.New, []byte(s.hashKey))
+	harsher.Write(body)
+	return hex.EncodeToString(harsher.Sum(nil)), nil
 }
