@@ -1,1 +1,0 @@
-{"id":"StackSys","type":"gauge","value":589824}

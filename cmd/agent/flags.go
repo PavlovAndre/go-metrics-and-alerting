@@ -28,8 +28,12 @@ func flagAddr(fs *flag.FlagSet) config.AgentOption {
 
 	return func(cfg *config.AgentCfg) {
 		//Проверка есть ли значение в переменной окружения
-		if env := os.Getenv("ADDRESS"); env != "" {
+		/*if env := os.Getenv("ADDRESS"); env != "" {
 			cfg.AddrServer = env
+			return
+		}*/
+		if val, ok := os.LookupEnv("ADDRESS"); ok {
+			cfg.AddrServer = val
 			return
 		}
 		cfg.AddrServer = addrFlag
@@ -41,8 +45,14 @@ func flagPollInterval(fs *flag.FlagSet) config.AgentOption {
 	fs.IntVar(&pollInterval, "p", 2, "poll interval")
 
 	return func(cfg *config.AgentCfg) {
-		if env := os.Getenv("POLL_INTERVAL"); env != "" {
+		/*if env := os.Getenv("POLL_INTERVAL"); env != "" {
 			if v, err := strconv.Atoi(env); err == nil {
+				cfg.PollInterval = v
+				return
+			}
+		}*/
+		if val, ok := os.LookupEnv("POLL_INTERVAL"); ok {
+			if v, err := strconv.Atoi(val); err == nil {
 				cfg.PollInterval = v
 				return
 			}
@@ -56,8 +66,14 @@ func flagReportInterval(fs *flag.FlagSet) config.AgentOption {
 	fs.IntVar(&reportInterval, "r", 10, "report interval")
 
 	return func(cfg *config.AgentCfg) {
-		if env := os.Getenv("REPORT_INTERVAL"); env != "" {
+		/*if env := os.Getenv("REPORT_INTERVAL"); env != "" {
 			if v, err := strconv.Atoi(env); err == nil {
+				cfg.ReportInterval = v
+				return
+			}
+		}*/
+		if val, ok := os.LookupEnv("REPORT_INTERVAL"); ok {
+			if v, err := strconv.Atoi(val); err == nil {
 				cfg.ReportInterval = v
 				return
 			}

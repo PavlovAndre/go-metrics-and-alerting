@@ -78,9 +78,9 @@ func GzipMiddleware(h http.Handler) http.Handler {
 		// проверяем, что клиент отправил серверу сжатые данные в формате gzip
 		contentEncoding := r.Header.Get("Content-Encoding")
 		sendsGzip := strings.Contains(contentEncoding, "gzip")
-		logger.Log.Infof("проверка кодирования1 %s, %b", string(contentEncoding), sendsGzip)
+		//logger.Log.Infof("проверка кодирования1 %s, %b", string(contentEncoding), sendsGzip)
 		if sendsGzip {
-			logger.Log.Infow("проверка кодирования2")
+			//logger.Log.Infow("проверка кодирования2")
 			// оборачиваем тело запроса в io.Reader с поддержкой декомпрессии
 			cr, err := newCompressReader(r.Body)
 			if err != nil {
@@ -99,16 +99,16 @@ func GzipMiddleware(h http.Handler) http.Handler {
 		// проверяем, что клиент умеет получать от сервера сжатые данные в формате gzip
 		acceptEncoding := r.Header.Get("Accept-Encoding")
 		supportsGzip := strings.Contains(acceptEncoding, "gzip")
-		logger.Log.Infof("проверка кодирования3 %s, %b", string(acceptEncoding), supportsGzip)
+		//logger.Log.Infof("проверка кодирования3 %s, %b", string(acceptEncoding), supportsGzip)
 		if supportsGzip {
 
-			logger.Log.Infof("проверка кодирования4")
+			//logger.Log.Infof("проверка кодирования4")
 			// оборачиваем оригинальный http.ResponseWriter новым с поддержкой сжатия
 			cw := newCompressWriter(w)
 			contentType := cw.Header().Get("Content-Type")
 			logger.Log.Infof("проверка кодирования5 %s", string(contentType))
 			cw.Header().Set("Content-Encoding", "gzip")
-			cw.Header().Set("Content-Type", "text/html")
+			//cw.Header().Set("Content-Type", "text/html")
 			// меняем оригинальный http.ResponseWriter на новый
 			ow = cw
 			// не забываем отправить клиенту все сжатые данные после завершения middleware

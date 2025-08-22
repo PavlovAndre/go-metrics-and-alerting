@@ -15,6 +15,7 @@ func parseFlags() (*config.ServerCfg, error) {
 		storeInterval(fs),
 		fileStorage(fs),
 		restore(fs),
+		databaseDSN(fs),
 	}
 
 	err := fs.Parse(os.Args[1:])
@@ -29,8 +30,8 @@ func addr(fs *flag.FlagSet) config.ServerOption {
 	fs.StringVar(&addrFlag, "a", "localhost:8080", "address and port to run server")
 
 	return func(cfg *config.ServerCfg) {
-		if env := os.Getenv("ADDRESS"); env != "" {
-			cfg.AddrServer = env
+		if val, ok := os.LookupEnv("ADDRESS"); ok {
+			cfg.AddrServer = val
 			return
 		}
 		cfg.AddrServer = addrFlag
@@ -42,8 +43,8 @@ func logLvl(fs *flag.FlagSet) config.ServerOption {
 	fs.StringVar(&lvlFlag, "l", "info", "log level")
 
 	return func(cfg *config.ServerCfg) {
-		if env := os.Getenv("LOG_LEVEL"); env != "" {
-			cfg.LogLevel = env
+		if val, ok := os.LookupEnv("LOG_LEVEL"); ok {
+			cfg.LogLevel = val
 			return
 		}
 		cfg.LogLevel = lvlFlag
@@ -55,11 +56,9 @@ func storeInterval(fs *flag.FlagSet) config.ServerOption {
 	fs.IntVar(&storeIntervalFlag, "i", 2, "period of save metrics. 0 is sync mode")
 
 	return func(cfg *config.ServerCfg) {
-		if env := os.Getenv("STORE_INTERVAL"); env != "" {
-			if v, err := strconv.Atoi(env); err == nil {
-				cfg.StoreInterval = v
-				return
-			}
+		if val, ok := os.LookupEnv("STORE_INTERVAL"); ok {
+			cfg.StoreInterval, _ = strconv.Atoi(val)
+			return
 		}
 		cfg.StoreInterval = storeIntervalFlag
 	}
@@ -67,29 +66,44 @@ func storeInterval(fs *flag.FlagSet) config.ServerOption {
 
 func fileStorage(fs *flag.FlagSet) config.ServerOption {
 	var fileStorageFlag string
-	fs.StringVar(&fileStorageFlag, "f", "storage.txt", "path to file storage to use")
+	fs.StringVar(&fileStorageFlag, "f", "" /*"storage.txt"*/, "path to file storage to use")
 
 	return func(cfg *config.ServerCfg) {
-		/*if env := os.Getenv("FILE_STORAGE_PATH"); env != "" {
-			cfg.FileStorage = env
+		if val, ok := os.LookupEnv("FILE_STORAGE_PATH"); ok {
+			cfg.FileStorage = val
 			return
-		}*/
+		}
 		cfg.FileStorage = fileStorageFlag
 	}
 }
 
 func restore(fs *flag.FlagSet) config.ServerOption {
 	var restoreFlag bool
-	fs.BoolVar(&restoreFlag, "r", true, "need to restore metrics")
+	fs.BoolVar(&restoreFlag, "r", false, "need to restore metrics")
 
 	return func(cfg *config.ServerCfg) {
-		if env := os.Getenv("RESTORE"); env != "" {
-			if v, err := strconv.ParseBool(env); err == nil {
+		if val, ok := os.LookupEnv("RESTORE"); ok {
+			if v, err := strconv.ParseBool(val); err == nil {
 				cfg.Restore = v
 				return
 			}
+		}
+
+		cfg.Restore = restoreFlag
+	}
+}
+
+func databaseDSN(fs *flag.FlagSet) config.ServerOption {
+	var databaseFlag string
+	fs.StringVar(&databaseFlag, "d",
+		"",
+		"connection string for database")
+
+	return func(cfg *config.ServerCfg) {
+		if val, ok := os.LookupEnv("DATABASE_DSN"); ok {
+			cfg.Database = val
 			return
 		}
-		cfg.Restore = restoreFlag
+		cfg.Database = databaseFlag
 	}
 }

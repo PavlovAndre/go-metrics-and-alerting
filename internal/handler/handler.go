@@ -1,6 +1,8 @@
 package handler
 
 import (
+	"context"
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"github.com/PavlovAndre/go-metrics-and-alerting.git/internal/logger"
@@ -12,6 +14,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"time"
 )
 
 type Handler struct {
@@ -24,11 +27,16 @@ type metrics struct {
 	Counter map[string]int64
 }
 
+func HTTPError(w http.ResponseWriter, error string, code int) {
+	w.WriteHeader(code)
+	fmt.Fprintln(w, error)
+}
+
 func New(store *repository.MemStore, root *chi.Mux) *Handler {
 	return &Handler{memStore: store, router: root}
 }
 
-const templateHTML = `<!DOCTYPE html>
+const TemplateHTML = `<!DOCTYPE html>
 <html>
 <body>
 <h2>gauges</h2>
@@ -47,7 +55,7 @@ func UpdatePage(store *repository.MemStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		//Проверяем, что метод POST
 		if r.Method != http.MethodPost {
-			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+			HTTPError(w, "method not allowed", http.StatusMethodNotAllowed)
 			return
 		}
 		metricType := chi.URLParam(r, "type")
@@ -56,7 +64,7 @@ func UpdatePage(store *repository.MemStore) http.HandlerFunc {
 
 		// Проверям, что введен правильный тип метрик
 		if metricType != "gauge" && metricType != "counter" {
-			http.Error(w, "Bad type of metric", http.StatusBadRequest)
+			HTTPError(w, "Bad type of metric", http.StatusBadRequest)
 			return
 		}
 
@@ -70,7 +78,7 @@ func UpdatePage(store *repository.MemStore) http.HandlerFunc {
 		if metricType == "gauge" {
 			val, err := strconv.ParseFloat(metricValue, 64)
 			if err != nil {
-				http.Error(w, "Bad value", http.StatusBadRequest)
+				HTTPError(w, "Bad value", http.StatusBadRequest)
 				return
 			}
 			store.SetGauge(metricName, val)
@@ -80,7 +88,7 @@ func UpdatePage(store *repository.MemStore) http.HandlerFunc {
 		if metricType == "counter" {
 			val, err := strconv.ParseInt(metricValue, 10, 64)
 			if err != nil {
-				http.Error(w, "Bad value", http.StatusBadRequest)
+				HTTPError(w, "Bad value", http.StatusBadRequest)
 				return
 			}
 			store.AddCounter(metricName, val)
@@ -127,9 +135,12 @@ func GetCountMetric(store *repository.MemStore) http.HandlerFunc {
 
 func AllMetrics(store *repository.MemStore) http.HandlerFunc {
 	return func(response http.ResponseWriter, r *http.Request) {
+		response.Header().Set("Content-Type", "text/html; charset=utf-8")
 		gauges := store.GetGauges()
 		counters := store.GetCounters()
-		t, err := template.New("templ").Parse(templateHTML)
+		logger.Log.Infow("<UNK> <UNK>", "gauges", gauges)
+		logger.Log.Infow("<UNK> <UNK>", "counters", counters)
+		t, err := template.New("templ").Parse(TemplateHTML)
 		if err != nil {
 			log.Printf("Failed to Allmetrics: %v", err)
 			response.WriteHeader(http.StatusInternalServerError)
@@ -142,33 +153,35 @@ func AllMetrics(store *repository.MemStore) http.HandlerFunc {
 
 	}
 }
+
+// UpdateJSON обрабатывает изменения одиночных запросов
 func UpdateJSON(store *repository.MemStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		logger.Log.Infow("Запущена функция UpdateJSON")
 		//Проверяем, что метод POST
-
 		if r.Method != http.MethodPost {
-			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+			HTTPError(w, "method not allowed", http.StatusMethodNotAllowed)
 			return
 		}
 		var req models.Metrics
 		buf, err := io.ReadAll(r.Body)
 		if err != nil {
 			log.Printf("Failed to UpdateJson: %v", err)
-			http.Error(w, "internal server error", http.StatusInternalServerError)
+			HTTPError(w, "internal server error", http.StatusInternalServerError)
 			return
 		}
 
 		err = json.Unmarshal(buf, &req)
-		logger.Log.Infow("Test", "error", err, "body", string(buf))
+		logger.Log.Infow("Лог UpdateJSON", "error", err, "body", string(buf))
 		if err != nil {
 			log.Printf("Failed to UpdateJson: %v", err)
-			http.Error(w, "internal server error", http.StatusInternalServerError)
+			HTTPError(w, "internal server error", http.StatusInternalServerError)
 			return
 		}
 
 		// Проверям, что введен правильный тип метрик
 		if req.MType != "gauge" && req.MType != "counter" {
-			http.Error(w, "Bad type of metric", http.StatusBadRequest)
+			HTTPError(w, "Bad type of metric", http.StatusBadRequest)
 			return
 		}
 
@@ -181,7 +194,7 @@ func UpdateJSON(store *repository.MemStore) http.HandlerFunc {
 		//Выполняем обновление значения gauge
 		if req.MType == "gauge" {
 			if req.Value == nil {
-				http.Error(w, "Bad value", http.StatusBadRequest)
+				HTTPError(w, "Bad value", http.StatusBadRequest)
 				return
 			}
 			store.SetGauge(req.ID, *req.Value)
@@ -191,10 +204,87 @@ func UpdateJSON(store *repository.MemStore) http.HandlerFunc {
 		//Выполняем инкремент значения counter
 		if req.MType == "counter" {
 			if req.Delta == nil {
-				http.Error(w, "Bad value", http.StatusBadRequest)
+				HTTPError(w, "Bad value", http.StatusBadRequest)
 				return
 			}
 			store.AddCounter(req.ID, *req.Delta)
+			w.Write([]byte("{}"))
+			w.WriteHeader(http.StatusOK)
+		}
+
+	}
+}
+
+// UpdatesJSON обрабатывает множественный запрос
+func UpdatesJSON(store *repository.MemStore) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		logger.Log.Infow("Запущена функция UpdatesJSON")
+		//Проверяем, что метод POST
+		if r.Method != http.MethodPost {
+			HTTPError(w, "method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+
+		//Читаем тело запроса
+
+		buf, err := io.ReadAll(r.Body)
+		if err != nil {
+			log.Printf("Failed to UpdateJson: %v", err)
+			HTTPError(w, "internal server error", http.StatusInternalServerError)
+			return
+		}
+		// Парсим тело в структуру запроса
+		var reqs []models.Metrics
+		err = json.Unmarshal(buf, &reqs)
+		logger.Log.Infow("Лог UpdatesJSON", "error", err, "body", string(buf))
+		if err != nil {
+			log.Printf("Failed to UpdateJson: %v", err)
+			HTTPError(w, "internal server error", http.StatusInternalServerError)
+			return
+		}
+
+		var (
+		//gauges   = make(map[string]float64)
+		//counters = make(map[string]int64)
+		)
+		//logger.Log.Infow("Значение мапы counters", "counters", counters)
+
+		for _, req := range reqs {
+			if req.ID == "" {
+				HTTPError(w, "internal server error", http.StatusInternalServerError)
+				return
+			}
+			// Проверям, что введен правильный тип метрик
+			if req.MType != "gauge" && req.MType != "counter" {
+				HTTPError(w, "Bad type of metric", http.StatusBadRequest)
+				return
+			}
+
+			//Проверка, что имя метрики не пустое
+			if req.ID == "" {
+				http.NotFound(w, r)
+				return
+			}
+
+			//Выполняем обновление значения gauge
+			if req.MType == "gauge" {
+				if req.Value == nil {
+					HTTPError(w, "Bad value", http.StatusBadRequest)
+					return
+				}
+				store.SetGauge(req.ID, *req.Value)
+				w.WriteHeader(http.StatusOK)
+			}
+
+			//Выполняем инкремент значения counter
+			if req.MType == "counter" {
+				if req.Delta == nil {
+					HTTPError(w, "Bad value", http.StatusBadRequest)
+					return
+				}
+				store.AddCounter(req.ID, *req.Delta)
+
+			}
 			w.WriteHeader(http.StatusOK)
 		}
 
@@ -203,10 +293,12 @@ func UpdateJSON(store *repository.MemStore) http.HandlerFunc {
 
 func ValueJSON(store *repository.MemStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		logger.Log.Infow("Запущена функция ValueJSON")
+		w.Header().Set("Content-Type", "application/json")
 		//Проверяем, что метод POST
 
 		if r.Method != http.MethodPost {
-			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+			HTTPError(w, "method not allowed", http.StatusMethodNotAllowed)
 			return
 		}
 
@@ -214,21 +306,21 @@ func ValueJSON(store *repository.MemStore) http.HandlerFunc {
 		buf, err := io.ReadAll(r.Body)
 		if err != nil {
 			log.Printf("Failed to UpdateJson: %v", err)
-			http.Error(w, "internal server error", http.StatusInternalServerError)
+			HTTPError(w, "internal server error", http.StatusInternalServerError)
 			return
 		}
 
-		logger.Log.Infow("Test", "body", string(buf))
+		logger.Log.Infow("Лог ValueJSON", "body", string(buf))
 		err = json.Unmarshal(buf, &req)
 
 		if err != nil {
 			log.Printf("Failed to UpdateJson: %v", err)
-			http.Error(w, "internal server error", http.StatusInternalServerError)
+			HTTPError(w, "internal server error", http.StatusInternalServerError)
 			return
 		}
 		// Проверям, что введен правильный тип метрик
 		if req.MType != "gauge" && req.MType != "counter" {
-			http.Error(w, "Bad type of metric", http.StatusBadRequest)
+			HTTPError(w, "Bad type of metric", http.StatusBadRequest)
 			return
 		}
 
@@ -241,7 +333,8 @@ func ValueJSON(store *repository.MemStore) http.HandlerFunc {
 			value, ok := store.GetCounter(req.ID)
 			if !ok {
 				logger.Log.Infow("Нет метрики")
-				http.NotFound(w, r)
+				//http.NotFound(w, r)
+				HTTPError(w, "{}", http.StatusNotFound)
 				return
 			}
 
@@ -259,7 +352,6 @@ func ValueJSON(store *repository.MemStore) http.HandlerFunc {
 			return
 
 		}
-		logger.Log.Infow("Test7")
 		if req.MType == "gauge" {
 			value, ok := store.GetGauge(req.ID)
 			if !ok {
@@ -281,5 +373,26 @@ func ValueJSON(store *repository.MemStore) http.HandlerFunc {
 
 		}
 
+	}
+}
+
+func GetPing(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		//Проверяем, что метод Get
+		if r.Method != http.MethodGet {
+			HTTPError(w, "method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+		logger.Log.Infow("Ping start")
+		ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
+		defer cancel()
+		err := db.PingContext(ctx)
+		if err != nil {
+			logger.Log.Infow("Error pinging database: ", err)
+			HTTPError(w, "unable to ping database", http.StatusInternalServerError)
+			return
+		}
+		logger.Log.Infow("Ping done")
+		w.WriteHeader(http.StatusOK)
 	}
 }

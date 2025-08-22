@@ -27,11 +27,21 @@ Accept: text/plain
 POST http://localhost:8080/update/
 Content-Type: application/json
 
-
 {
-  "id": "PollCount",
+  "id": "PollCount11",
   "type": "counter",
   "delta": 45
+
+}
+
+###Post empty Json update
+POST http://localhost:8080/update/
+Content-Type: application/json
+
+
+{
+  "id": "PollCount10",
+  "type": "counter"
 
 }
 
@@ -41,7 +51,7 @@ Content-Type: application/json
 
 
 {
-  "id": "PollCount",
+  "id": "PollCount10",
   "type": "counter"
 }
 
@@ -66,7 +76,7 @@ User-Agent: go-resty/2.7.0
 
 GET / HTTP/1.1
 Host: localhost:8080
-Accept: text/html
+Accept: application/json
 Accept-Encoding: gzip
 User-Agent: go-resty/2.7.0
 
@@ -77,3 +87,50 @@ Host: localhost:8080
 Accept: application/json
 Content-Type: application/json
 User-Agent: go-resty/2.7.0
+
+###Get Ping
+GET /ping HTTP/1.1
+Host: localhost:8080
+Accept: text/html
+Accept-Encoding: gzip
+User-Agent: go-resty/2.7.0
+
+###Get Ping2
+POST /value/ HTTP/1.1
+Host: localhost:8080
+Accept: application/json
+Content-Type: application/json
+User-Agent: go-resty/2.7.0 (https://github.com/go-resty/resty)
+
+###Post Json updates
+POST http://localhost:8080/updates/
+Content-Type: application/json
+
+[
+{
+  "id": "PollCount6",
+  "type": "counter",
+  "delta": 5
+
+},
+{
+  "id": "PollCount6",
+  "type": "counter",
+  "delta": 6
+
+},
+  {
+    "id": "PollCount7",
+    "type": "counter",
+    "delta": 7
+
+  }
+]
+
+###Post Json updates
+ POST /value/ HTTP/1.1
+Host: localhost:8080
+Accept: application/json
+Accept-Encoding: gzip
+Content-Type: application/json
+User-Agent: go-resty/2.7.0 (https://github.com/go-resty/resty)
