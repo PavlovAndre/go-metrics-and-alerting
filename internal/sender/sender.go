@@ -282,6 +282,7 @@ func (s *Sender) SendMetrics2() error {
 	log.Printf("Start func SendMetrics2")
 	client := &http.Client{}
 	var metrics []models.Metrics
+	var reqBodyHash string
 	for key, value := range s.memStore.GetGauges() {
 		send := models.Metrics{
 			ID:    key,
@@ -313,7 +314,7 @@ func (s *Sender) SendMetrics2() error {
 	if hashErr != nil {
 		log.Println("Cant hash body", err)
 	} else {
-		//req.Header.Set("HashSHA256", bodyHash)
+		reqBodyHash = bodyHash
 	}
 
 	sendURL := fmt.Sprintf("http://%s/updates/", s.addrServer)
@@ -329,7 +330,7 @@ func (s *Sender) SendMetrics2() error {
 		log.Printf("ошибка создания запроса")
 		return err
 	}
-	req.Header.Set("HashSHA256", bodyHash)
+	req.Header.Set("HashSHA256", reqBodyHash)
 	req.Header.Set("Content-Encoding", "gzip")
 	req.Header.Set("Accept-Encoding", "gzip")
 	resp, err := client.Do(req)
