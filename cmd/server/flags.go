@@ -16,6 +16,7 @@ func parseFlags() (*config.ServerCfg, error) {
 		fileStorage(fs),
 		restore(fs),
 		databaseDSN(fs),
+		hashKey(fs),
 	}
 
 	err := fs.Parse(os.Args[1:])
@@ -105,5 +106,18 @@ func databaseDSN(fs *flag.FlagSet) config.ServerOption {
 			return
 		}
 		cfg.Database = databaseFlag
+	}
+}
+
+func hashKey(fs *flag.FlagSet) config.ServerOption {
+	var key string
+	fs.StringVar(&key, "k", "", "hash key")
+
+	return func(cfg *config.ServerCfg) {
+		if val, ok := os.LookupEnv("KEY"); ok {
+			cfg.HashKey = val
+			return
+		}
+		cfg.HashKey = key
 	}
 }
