@@ -24,6 +24,7 @@ func CheckSign(next http.Handler) http.Handler {
 			hash, err := hex.DecodeString(hashHeader)
 			if err != nil {
 				//helpers.SetHTTPError(w, http.StatusBadRequest, []byte(err.Error()))
+				w.WriteHeader(http.StatusBadRequest)
 				return
 			}
 
