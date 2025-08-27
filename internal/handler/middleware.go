@@ -23,7 +23,6 @@ func CheckSign(next http.Handler) http.Handler {
 		if hashHeader := r.Header.Get("HashSHA256"); hashHeader != "" && config.Params.HashKey != "" {
 			hash, err := hex.DecodeString(hashHeader)
 			if err != nil {
-				//helpers.SetHTTPError(w, http.StatusBadRequest, []byte(err.Error()))
 				w.WriteHeader(http.StatusBadRequest)
 				return
 			}
@@ -31,7 +30,6 @@ func CheckSign(next http.Handler) http.Handler {
 			// Читаем тело запроса
 			rawBody, err := io.ReadAll(r.Body)
 			if err != nil {
-				//helpers.SetHTTPError(w, http.StatusBadRequest, []byte(err.Error()))
 				w.WriteHeader(http.StatusBadRequest)
 				return
 			}
@@ -42,7 +40,6 @@ func CheckSign(next http.Handler) http.Handler {
 			harsher.Write(rawBody)
 			hashSum := harsher.Sum(nil)
 			if !hmac.Equal(hash, hashSum) {
-				//helpers.SetHTTPError(w, http.StatusBadRequest, []byte("body sign is not correct"))
 				w.WriteHeader(http.StatusBadRequest)
 				return
 			}
