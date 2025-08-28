@@ -27,7 +27,6 @@ func updateOneMetric(req models.Metrics, db *sql.DB, r *http.Request) (errorTxt 
 	errorTxt = ""
 	code = 0
 	if req.MType != "gauge" && req.MType != "counter" {
-		//HTTPError(w, "Bad type of metric", http.StatusBadRequest)
 		errorTxt = "Bad type of metric"
 		code = http.StatusBadRequest
 		return errorTxt, code

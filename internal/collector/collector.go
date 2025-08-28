@@ -1,7 +1,11 @@
 package collector
 
 import (
+	"fmt"
+	"github.com/PavlovAndre/go-metrics-and-alerting.git/internal/logger"
 	"github.com/PavlovAndre/go-metrics-and-alerting.git/internal/repository"
+	"github.com/shirou/gopsutil/cpu"
+	"github.com/shirou/gopsutil/mem"
 	"math/rand"
 	"runtime"
 	"time"
@@ -53,6 +57,30 @@ func (c *Collector) CollectMetrics() {
 			c.memStore.SetGauge("TotalAlloc", float64(m.TotalAlloc))
 			c.memStore.SetGauge("RandomValue", rand.Float64())
 			c.memStore.AddCounter("PollCount", 1)
+		}
+	}
+}
+
+// CollectSystemMetrics Функция сбора метрик
+func (c *Collector) CollectSystemMetrics() {
+	for {
+		ticker := time.NewTicker(time.Duration(c.pollInterval) * time.Second)
+		for range ticker.C {
+			memStat, err := mem.VirtualMemory()
+			if err != nil {
+				logger.Log.Infow("Ошибка опроса системных переменных", err)
+			}
+
+			c.memStore.SetGauge("TotalMemory", float64(memStat.Total))
+			c.memStore.SetGauge("FreeMemory", float64(memStat.Free))
+
+			cpuStat, err := cpu.Percent(0, true)
+			if err != nil {
+				logger.Log.Infow("Ошибка опроса количества CPU", err)
+			}
+			for i, percent := range cpuStat {
+				c.memStore.SetGauge(fmt.Sprintf("CPUutilization%d", i), percent)
+			}
 		}
 	}
 }

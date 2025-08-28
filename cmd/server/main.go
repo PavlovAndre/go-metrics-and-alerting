@@ -21,41 +21,43 @@ import (
 func main() {
 
 	// обрабатываем аргументы  командной строки
-	config, err := parseFlags()
+	configServer, err := parseFlags()
 	if err != nil {
 		log.Fatal(err)
 	}
+	config.Params = configServer
 
 	// Контекст закрытия приложения
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer stop()
 
 	// Инициализируем логер
-	lgr, err := logger.New(config.LogLevel)
+	lgr, err := logger.New(configServer.LogLevel)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	logger.Log = lgr
 	logger.Log.Infow("starting server",
-		"address", config.AddrServer,
-		"logLevel", config.LogLevel,
-		"path", config.FileStorage,
-		"restore", config.Restore,
-		"storeInterval", config.StoreInterval,
-		"database", config.Database)
+		"address", configServer.AddrServer,
+		"logLevel", configServer.LogLevel,
+		"path", configServer.FileStorage,
+		"restore", configServer.Restore,
+		"storeInterval", configServer.StoreInterval,
+		"database", configServer.Database,
+		"hashKey", configServer.HashKey)
 	store := repository.New()
 	var fileStore *logger.FileStorage
 
-	if config.Database == "" {
-		fileStore = logger.NewFileStorage(store, config.StoreInterval)
-		if config.Restore {
-			fileStore.Read(config.FileStorage)
+	if configServer.Database == "" {
+		fileStore = logger.NewFileStorage(store, configServer.StoreInterval)
+		if configServer.Restore {
+			fileStore.Read(configServer.FileStorage)
 		}
 	}
 
 	//Подключение к базе
-	ps := config.Database
+	ps := configServer.Database
 	db, err := sql.Open("pgx", ps)
 
 	if err != nil {
@@ -63,7 +65,7 @@ func main() {
 	}
 	defer db.Close()
 	logger.Log.Info(ps)
-	if config.Database != "" {
+	if configServer.Database != "" {
 		logger.Log.Info("Migrate migrations")
 		// Применим миграции
 		migrator, err := migrations.Migrations()
@@ -77,14 +79,15 @@ func main() {
 
 	r := chi.NewRouter()
 
-	r.Use(logger.LogRequest, logger.LogResponse, compress.GzipMiddleware)
+	r.Use(logger.LogRequest, logger.LogResponse, compress.GzipMiddleware, handler.CheckSign)
 	r.Group(func(r1 chi.Router) {
 		r1.Post("/update/{type}/{name}/{value}", handler.UpdatePage(store))
 		r1.Get("/value/{type}/{name}", handler.GetCountMetric(store))
 	})
-	if config.Database != "" {
+	if configServer.Database != "" {
 		r.Get("/", handler.AllDB(db))
 		r.Group(func(r2 chi.Router) {
+			//if configServer.HashKey != ""{r2.Use(handler.CheckSign)}
 			r2.Post("/update/", handler.UpdateDB(db))
 			r2.Post("/value/", handler.ValueDB(db))
 			r2.Post("/updates/", handler.UpdatesDB(db))
@@ -104,8 +107,8 @@ func main() {
 	wg.Add(3)
 	go func() {
 		defer wg.Done()
-		if config.FileStorage != "" {
-			fileStore.Write(config.FileStorage)
+		if configServer.FileStorage != "" {
+			fileStore.Write(configServer.FileStorage)
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -115,7 +118,7 @@ func main() {
 
 	go func() {
 		defer wg.Done()
-		if err := runServer(r, config); err != nil {
+		if err := runServer(r, configServer); err != nil {
 			log.Fatal(err)
 		}
 	}()
@@ -125,8 +128,8 @@ func main() {
 		// Ожидание сигнала завершения
 		<-ctx.Done()
 		log.Println("Получен сигнал завершения")
-		if config.FileStorage != "" {
-			fileStore.WriteEnd(config.FileStorage)
+		if configServer.FileStorage != "" {
+			fileStore.WriteEnd(configServer.FileStorage)
 		}
 		os.Exit(0)
 	}()
