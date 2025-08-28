@@ -15,6 +15,7 @@ func parseFlags() (*config.AgentCfg, error) {
 		flagPollInterval(fs),
 		flagReportInterval(fs),
 		flagHashKey(fs),
+		flagRateLimit(fs),
 	}
 	err := fs.Parse(os.Args[1:])
 	if err != nil {
@@ -76,5 +77,20 @@ func flagHashKey(fs *flag.FlagSet) config.AgentOption {
 			cfg.HashKey = val
 		}
 		cfg.HashKey = hashKey
+	}
+}
+
+func flagRateLimit(fs *flag.FlagSet) config.AgentOption {
+	var rateLimit int
+	fs.IntVar(&rateLimit, "l", 2, "rate limit")
+
+	return func(cfg *config.AgentCfg) {
+		if val, ok := os.LookupEnv("RATE_LIMIT"); ok {
+			if v, err := strconv.Atoi(val); err == nil {
+				cfg.RateLimit = v
+				return
+			}
+		}
+		cfg.RateLimit = rateLimit
 	}
 }

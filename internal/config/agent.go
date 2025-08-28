@@ -5,6 +5,7 @@ type AgentCfg struct {
 	PollInterval   int
 	ReportInterval int
 	HashKey        string
+	RateLimit      int
 }
 
 type AgentOption func(*AgentCfg)

@@ -32,6 +32,11 @@ func main() {
 		coll.CollectMetrics()
 	}()
 	go func() {
+		logger.Log.Infow("Starting system collector")
+		defer wg.Done()
+		coll.CollectSystemMetrics()
+	}()
+	go func() {
 		logger.Log.Infow("Starting sender")
 		defer wg.Done()
 		send.SendMetricsBatchJSONPeriod(ctx)
