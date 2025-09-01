@@ -26,12 +26,13 @@ type Sender struct {
 	reportInterval int
 	addrServer     string
 	hashKey        string
+	wp             *WorkerPool
 }
 
 var ErrUnableToSendMetrics = errors.New("unable to send metrics")
 
-func New(store *repository.MemStore, sendInt int, addr string, key string) *Sender {
-	return &Sender{memStore: store, reportInterval: sendInt, addrServer: addr, hashKey: key}
+func New(store *repository.MemStore, sendInt int, addr string, key string, worker *WorkerPool) *Sender {
+	return &Sender{memStore: store, reportInterval: sendInt, addrServer: addr, hashKey: key, wp: worker}
 }
 
 // SendMetrics Функция отправки метрик
@@ -280,7 +281,7 @@ func (s *Sender) retrySend() {
 
 func (s *Sender) SendMetrics2() error {
 	log.Printf("Start func SendMetrics2")
-	client := &http.Client{}
+	//client := &http.Client{}
 	var metrics []models.Metrics
 	for key, value := range s.memStore.GetGauges() {
 		send := models.Metrics{
@@ -298,7 +299,11 @@ func (s *Sender) SendMetrics2() error {
 		}
 		metrics = append(metrics, send)
 	}
-	body, err := json.Marshal(metrics)
+	err := s.wp.Send(metrics)
+	if err != nil {
+		return err
+	}
+	/*body, err := json.Marshal(metrics)
 	if err != nil {
 		log.Printf("Error marshalling json: %s\n", err)
 		return err
@@ -334,7 +339,7 @@ func (s *Sender) SendMetrics2() error {
 		log.Printf("ошибка отправки запроса %s", err)
 		return err
 	}
-	resp.Body.Close()
+	resp.Body.Close()*/
 	s.memStore.SetCounter("PollCount", 0)
 	return nil
 }

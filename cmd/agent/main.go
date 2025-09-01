@@ -21,10 +21,11 @@ func main() {
 	defer cancel()
 
 	wg := sync.WaitGroup{}
-	wg.Add(2)
+	wg.Add(3)
 	store := repository.New()
 	coll := collector.New(store, configAgent.PollInterval)
-	send := sender.New(store, configAgent.ReportInterval, configAgent.AddrServer, configAgent.HashKey)
+	workPool := sender.NewWorkerPool(configAgent.RateLimit, configAgent.AddrServer, configAgent.HashKey)
+	send := sender.New(store, configAgent.ReportInterval, configAgent.AddrServer, configAgent.HashKey, workPool)
 
 	go func() {
 		logger.Log.Infow("Starting collector")
@@ -36,9 +37,12 @@ func main() {
 		defer wg.Done()
 		coll.CollectSystemMetrics()
 	}()
+
 	go func() {
 		logger.Log.Infow("Starting sender")
 		defer wg.Done()
+		//sender.NewWorkerPool(configAgent.RateLimit, )
+		//workPool.RunWorker(send)
 		send.SendMetricsBatchJSONPeriod(ctx)
 	}()
 	wg.Wait()
