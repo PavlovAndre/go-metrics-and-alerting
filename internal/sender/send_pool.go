@@ -19,7 +19,7 @@ import (
 type Result struct {
 	Value    any
 	Err      error
-	WorkerId int
+	WorkerID int
 }
 type WorkerPool struct {
 	//Workers  int
@@ -140,18 +140,19 @@ func (wp *WorkerPool) RunWorker(wg *sync.WaitGroup, id int) {
 	log.Printf("Start func RunWorker %d", id)
 	defer wg.Done()
 	for {
-		select {
+		//select {
 
-		case v, ok := <-wp.JobsCh:
-			if !ok {
-				log.Printf("jobs channel closed, closing worker")
-				return
-			}
-			log.Printf("worker received job")
-
-			err := wp.SendWorkerPool(v.Metrics)
-			v.Result <- err
+		//case
+		v, ok := <-wp.JobsCh
+		if !ok {
+			log.Printf("jobs channel closed, closing worker")
+			return
 		}
+		log.Printf("worker received job")
+
+		err := wp.SendWorkerPool(v.Metrics)
+		v.Result <- err
+		//}
 	}
 }
 
