@@ -47,13 +47,13 @@ func NewWorkerPool(workers int, addr string, key string) *WorkerPool {
 	return w
 }
 
-func (wp *WorkerPool) Stop() {
+/*func (wp *WorkerPool) Stop() {
 	if wp.closed.Load() {
 		return
 	}
 	wp.closed.Store(true)
 	close(wp.JobsCh)
-}
+}*/
 
 func (wp *WorkerPool) Send(metrics []models.Metrics) error {
 	work := Work{}
