@@ -22,13 +22,10 @@ type Result struct {
 	WorkerID int
 }
 type WorkerPool struct {
-	//Workers  int
-	JobsCh chan *Work
-	//ResultCh   chan Result
+	JobsCh     chan *Work
 	addrServer string
 	hashKey    string
 	closed     atomic.Bool
-	//DoneCh   chan struct{}
 }
 
 type Work struct {
@@ -41,19 +38,12 @@ func NewWorkerPool(workers int, addr string, key string) *WorkerPool {
 		JobsCh:     make(chan *Work),
 		addrServer: addr,
 		hashKey:    key,
-		//ResultCh: make(chan Result),
 	}
 	wg := sync.WaitGroup{}
 	wg.Add(workers)
 	for i := range workers {
 		go w.RunWorker(&wg, i)
 	}
-	/*go func() {
-		// ждём завершения всех горутин
-		wg.Wait()
-		// когда все горутины завершились, закрываем результирующий канал
-		close(w.ResultCh)
-	}()*/
 	return w
 }
 
@@ -77,23 +67,6 @@ func (wp *WorkerPool) Send(metrics []models.Metrics) error {
 func (wp *WorkerPool) SendWorkerPool(metrics []models.Metrics) error {
 	log.Printf("Start func SendMetrics2")
 	client := &http.Client{}
-	//var metrics []models.Metrics
-	/*for key, value := range s.memStore.GetGauges() {
-		send := models.Metrics{
-			ID:    key,
-			MType: "gauge",
-			Value: &value,
-		}
-		metrics = append(metrics, send)
-	}
-	for key, value := range s.memStore.GetCounters() {
-		send := models.Metrics{
-			ID:    key,
-			MType: "counter",
-			Delta: &value,
-		}
-		metrics = append(metrics, send)
-	}*/
 	body, err := json.Marshal(metrics)
 	if err != nil {
 		log.Printf("Error marshalling json: %s\n", err)
@@ -131,7 +104,6 @@ func (wp *WorkerPool) SendWorkerPool(metrics []models.Metrics) error {
 		return err
 	}
 	resp.Body.Close()
-	//s.memStore.SetCounter("PollCount", 0)
 	return nil
 
 }
@@ -140,9 +112,6 @@ func (wp *WorkerPool) RunWorker(wg *sync.WaitGroup, id int) {
 	log.Printf("Start func RunWorker %d", id)
 	defer wg.Done()
 	for {
-		//select {
-
-		//case
 		v, ok := <-wp.JobsCh
 		if !ok {
 			log.Printf("jobs channel closed, closing worker")
@@ -152,7 +121,6 @@ func (wp *WorkerPool) RunWorker(wg *sync.WaitGroup, id int) {
 
 		err := wp.SendWorkerPool(v.Metrics)
 		v.Result <- err
-		//}
 	}
 }
 

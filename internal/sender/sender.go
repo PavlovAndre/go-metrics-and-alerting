@@ -281,7 +281,6 @@ func (s *Sender) retrySend() {
 
 func (s *Sender) SendMetrics2() error {
 	log.Printf("Start func SendMetrics2")
-	//client := &http.Client{}
 	var metrics []models.Metrics
 	for key, value := range s.memStore.GetGauges() {
 		send := models.Metrics{
@@ -303,43 +302,7 @@ func (s *Sender) SendMetrics2() error {
 	if err != nil {
 		return err
 	}
-	/*body, err := json.Marshal(metrics)
-	if err != nil {
-		log.Printf("Error marshalling json: %s\n", err)
-		return err
-	}
-	compressBody, err := compress.GZIPCompress(body)
-	if err != nil {
-		log.Printf("Error compressing json: %s\n", err)
-	}
 
-	sendURL := fmt.Sprintf("http://%s/updates/", s.addrServer)
-	conn, err := net.DialTimeout("tcp", s.addrServer, 0)
-	if err != nil {
-		log.Printf("Error connecting to %s: %s\n", sendURL, err)
-		return err
-	}
-	conn.Close()
-
-	req, err := http.NewRequest("POST", sendURL, bytes.NewReader(compressBody))
-	if err != nil {
-		log.Printf("ошибка создания запроса")
-		return err
-	}
-	// Устанавливаем заголовок
-	if s.hashKey != "" {
-		bodyHash := s.hashBody(body)
-		req.Header.Set("HashSHA256", bodyHash)
-		log.Printf("Установили заголовок HashSHA256 %s", bodyHash)
-	}
-	req.Header.Set("Content-Encoding", "gzip")
-	req.Header.Set("Accept-Encoding", "gzip")
-	resp, err := client.Do(req)
-	if err != nil {
-		log.Printf("ошибка отправки запроса %s", err)
-		return err
-	}
-	resp.Body.Close()*/
 	s.memStore.SetCounter("PollCount", 0)
 	return nil
 }
