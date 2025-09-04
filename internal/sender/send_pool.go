@@ -111,12 +111,18 @@ func (wp *WorkerPool) SendWorkerPool(metrics []models.Metrics) error {
 func (wp *WorkerPool) RunWorker(wg *sync.WaitGroup, id int) {
 	log.Printf("Start func RunWorker %d", id)
 	defer wg.Done()
-	for {
+	/*for {
 		v, ok := <-wp.JobsCh
 		if !ok {
 			log.Printf("jobs channel closed, closing worker")
 			return
 		}
+		log.Printf("worker received job")
+
+		err := wp.SendWorkerPool(v.Metrics)
+		v.Result <- err
+	}*/
+	for v := range wp.JobsCh {
 		log.Printf("worker received job")
 
 		err := wp.SendWorkerPool(v.Metrics)
