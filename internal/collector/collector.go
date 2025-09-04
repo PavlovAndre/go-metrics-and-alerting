@@ -77,6 +77,7 @@ func (c *Collector) CollectSystemMetrics() {
 			cpuStat, err := cpu.Percent(0, true)
 			if err != nil {
 				logger.Log.Infow("Ошибка опроса количества CPU", err)
+				return
 			}
 			for i, percent := range cpuStat {
 				c.memStore.SetGauge(fmt.Sprintf("CPUutilization%d", i), percent)
