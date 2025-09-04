@@ -30,7 +30,7 @@ func CheckSign(next http.Handler) http.Handler {
 			// Читаем тело запроса
 			rawBody, err := io.ReadAll(r.Body)
 			if err != nil {
-				w.WriteHeader(http.StatusBadRequest)
+				w.WriteHeader(http.StatusInternalServerError)
 				return
 			}
 			// Ставим тело снова, чтобы его можно было прочитать снова.
