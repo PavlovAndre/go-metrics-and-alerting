@@ -243,12 +243,6 @@ func UpdatesJSON(store *repository.MemStore) http.HandlerFunc {
 			return
 		}
 
-		var (
-		//gauges   = make(map[string]float64)
-		//counters = make(map[string]int64)
-		)
-		//logger.Log.Infow("Значение мапы counters", "counters", counters)
-
 		for _, req := range reqs {
 			if req.ID == "" {
 				HTTPError(w, "internal server error", http.StatusInternalServerError)

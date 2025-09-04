@@ -12,7 +12,7 @@ import (
 
 func main() {
 	logger.Log.Infow("Starting agent")
-	config, err := parseFlags()
+	configAgent, err := parseFlags()
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -21,16 +21,23 @@ func main() {
 	defer cancel()
 
 	wg := sync.WaitGroup{}
-	wg.Add(2)
+	wg.Add(3)
 	store := repository.New()
-	coll := collector.New(store, config.PollInterval)
-	send := sender.New(store, config.ReportInterval, config.AddrServer)
+	coll := collector.New(store, configAgent.PollInterval)
+	workPool := sender.NewWorkerPool(configAgent.RateLimit, configAgent.AddrServer, configAgent.HashKey)
+	send := sender.New(store, configAgent.ReportInterval, configAgent.AddrServer, configAgent.HashKey, workPool)
 
 	go func() {
 		logger.Log.Infow("Starting collector")
 		defer wg.Done()
 		coll.CollectMetrics()
 	}()
+	go func() {
+		logger.Log.Infow("Starting system collector")
+		defer wg.Done()
+		coll.CollectSystemMetrics()
+	}()
+
 	go func() {
 		logger.Log.Infow("Starting sender")
 		defer wg.Done()

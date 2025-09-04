@@ -7,7 +7,10 @@ type ServerCfg struct {
 	FileStorage   string //Путь к файлу записи
 	Restore       bool   //Признак, надо ли загружать данные из файла, 1 - надо, 0 - нет
 	Database      string //Строка соединения с БД
+	HashKey       string //Хеш ключ
 }
+
+var Params *ServerCfg
 
 type ServerOption func(*ServerCfg)
 
