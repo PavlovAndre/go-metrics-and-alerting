@@ -6,6 +6,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"github.com/PavlovAndre/go-metrics-and-alerting.git/internal/config"
+	"github.com/PavlovAndre/go-metrics-and-alerting.git/internal/logger"
 	"io"
 	"net/http"
 )
@@ -31,6 +32,7 @@ func CheckSign(next http.Handler) http.Handler {
 			rawBody, err := io.ReadAll(r.Body)
 			if err != nil {
 				w.WriteHeader(http.StatusInternalServerError)
+				logger.Log.Infow("Ошибка чтения тела запроса", "error", err)
 				return
 			}
 			// Ставим тело снова, чтобы его можно было прочитать снова.
