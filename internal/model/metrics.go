@@ -21,28 +21,3 @@ type ResponseBody struct {
 	Delta   int64   `json:"delta,omitempty"` // Новое значение метрики в случае передачи counter
 	Value   float64 `json:"value,omitempty"` // Новое значение метрики в случае передачи gauge
 }
-
-// Request описывает запрос пользователя.
-/*type Request struct {
-	Request SimpleUtterance `json:"request"`
-	Version string          `json:"version"`
-}
-
-// SimpleUtterance описывает команду, полученную в запросе типа SimpleUtterance.
-type SimpleUtterance struct {
-	Type    string `json:"type"`
-	Command string `json:"command"`
-}
-
-// Response описывает ответ сервера.
-// см. https://yandex.ru/dev/dialogs/alice/doc/response.html
-type Response struct {
-	Response ResponsePayload `json:"response"`
-	Version  string          `json:"version"`
-}
-
-// ResponsePayload описывает ответ, который нужно озвучить.
-type ResponsePayload struct {
-	Text string `json:"text"`
-}
-*/
